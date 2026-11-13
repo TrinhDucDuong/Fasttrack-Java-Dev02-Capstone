@@ -15,7 +15,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 class RabbitMqIntegrationTest {
     @Container
     private static final RabbitMQContainer RABBIT = new RabbitMQContainer("rabbitmq:3.13-management")
-            .withUser("study", "study", java.util.Set.of("administrator"));
+            .withUser("study", "study", java.util.Set.of("administrator"))
+            .withPermission("/", "study", ".*", ".*", ".*");
 
     @Test
     void publishesAndReceivesAMessageFromRabbitMq() {

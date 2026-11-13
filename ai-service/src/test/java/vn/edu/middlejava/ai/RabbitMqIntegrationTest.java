@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Testcontainers(disabledWithoutDocker = true)
 class RabbitMqIntegrationTest {
     @Container
-    private static final RabbitMQContainer RABBIT = new RabbitMQContainer("rabbitmq:4-management")
+    private static final RabbitMQContainer RABBIT = new RabbitMQContainer("rabbitmq:3.13-management")
             .withUser("study", "study", java.util.Set.of("administrator"));
 
     @Test

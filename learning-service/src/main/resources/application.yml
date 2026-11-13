@@ -1,0 +1,80 @@
+server:
+  port: ${SERVER_PORT:8081}
+
+spring:
+  application:
+    name: learning-service
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/study_coach?currentSchema=learning,public}
+    username: ${DB_USERNAME:study_coach}
+    password: ${DB_PASSWORD:study_coach}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        default_schema: learning
+        jdbc:
+          batch_size: 25
+        cache:
+          use_second_level_cache: true
+          region.factory_class: org.hibernate.cache.jcache.internal.JCacheRegionFactory
+        javax:
+          cache:
+            missing_cache_strategy: create
+  flyway:
+    default-schema: learning
+    schemas: learning
+    create-schemas: true
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:study_coach}
+    password: ${RABBITMQ_PASSWORD:study_coach}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          secret: ${JWT_SECRET:c3R1ZHktY29hY2gtbG9jYWwtc2VjcmV0LWtleS1mb3ItZGV2ZWxvcG1lbnQ=}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,loggers
+  endpoint:
+    health:
+      show-details: when_authorized
+
+app:
+  reminders:
+    poll-interval-ms: ${REMINDER_POLL_INTERVAL_MS:60000}
+  security:
+    jwt-secret: ${JWT_SECRET:c3R1ZHktY29hY2gtbG9jYWwtc2VjcmV0LWtleS1mb3ItZGV2ZWxvcG1lbnQ=}
+    access-token-minutes: 15
+    refresh-token-days: 14
+
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        cache:
+          use_second_level_cache: false
+  flyway:
+    enabled: false

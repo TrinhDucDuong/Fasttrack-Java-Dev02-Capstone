@@ -1,0 +1,86 @@
+services:
+  rabbitmq:
+    image: rabbitmq:4-management
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    mem_limit: 512m
+
+  discovery-server:
+    image: ${ECR_REGISTRY}/studycoach/discovery-server:${IMAGE_TAG}
+    restart: unless-stopped
+    environment:
+      SERVER_PORT: 8761
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    mem_limit: 384m
+
+  learning-service:
+    image: ${ECR_REGISTRY}/studycoach/learning-service:${IMAGE_TAG}
+    restart: unless-stopped
+    environment:
+      DB_URL: jdbc:postgresql://${DB_HOST}:5432/study_coach?currentSchema=learning,public&sslmode=require
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      EUREKA_URL: http://discovery-server:8761/eureka/
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      discovery-server:
+        condition: service_started
+    mem_limit: 640m
+
+  ai-service:
+    image: ${ECR_REGISTRY}/studycoach/ai-service:${IMAGE_TAG}
+    restart: unless-stopped
+    environment:
+      DB_URL: jdbc:postgresql://${DB_HOST}:5432/study_coach?currentSchema=ai,public&sslmode=require
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      EUREKA_URL: http://discovery-server:8761/eureka/
+      JWT_SECRET: ${JWT_SECRET}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      AI_MODE: remote
+      AI_CHAT_MODEL: openai/gpt-oss-120b
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      discovery-server:
+        condition: service_started
+    mem_limit: 640m
+
+  api-gateway:
+    image: ${ECR_REGISTRY}/studycoach/api-gateway:${IMAGE_TAG}
+    restart: unless-stopped
+    environment:
+      EUREKA_URL: http://discovery-server:8761/eureka/
+    depends_on:
+      discovery-server:
+        condition: service_started
+      learning-service:
+        condition: service_started
+      ai-service:
+        condition: service_started
+    ports:
+      - "8080:8080"
+    mem_limit: 384m
+
+volumes:
+  rabbitmq-data:
+

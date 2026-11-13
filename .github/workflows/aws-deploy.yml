@@ -1,0 +1,96 @@
+name: CI and deploy to AWS
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: study-coach-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      - run: mvn -B verify
+
+  deploy:
+    if: github.event_name == 'push' && vars.AWS_DEPLOY_ENABLED == 'true'
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      EC2_INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      - run: mvn -B -DskipTests package
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - name: Log in to Amazon ECR
+        id: ecr
+        shell: bash
+        run: |
+          account_id="$(aws sts get-caller-identity --query Account --output text)"
+          registry="${account_id}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+          aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$registry"
+          echo "registry=$registry" >> "$GITHUB_OUTPUT"
+      - name: Build and push service images
+        shell: bash
+        env:
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          for service in discovery-server api-gateway learning-service ai-service; do
+            docker build --file deploy/Dockerfile --build-arg SERVICE="$service" --tag "$REGISTRY/studycoach/$service:$IMAGE_TAG" .
+            docker push "$REGISTRY/studycoach/$service:$IMAGE_TAG"
+          done
+      - name: Store Groq key in AWS Parameter Store
+        shell: bash
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: |
+          test -n "$GROQ_API_KEY"
+          aws ssm put-parameter --name /studycoach/prod/groq-api-key --type SecureString --value "$GROQ_API_KEY" --overwrite >/dev/null
+      - name: Deploy on EC2 through Systems Manager
+        shell: bash
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          test -n "$EC2_INSTANCE_ID"
+          command_id="$(aws ssm send-command \
+            --instance-ids "$EC2_INSTANCE_ID" \
+            --document-name AWS-RunShellScript \
+            --parameters "commands=AWS_REGION=$AWS_REGION /opt/study-coach/deploy/deploy-compose.sh $IMAGE_TAG" \
+            --query 'Command.CommandId' --output text)"
+          for attempt in $(seq 1 60); do
+            status="$(aws ssm get-command-invocation --command-id "$command_id" --instance-id "$EC2_INSTANCE_ID" --query Status --output text 2>/dev/null || true)"
+            case "$status" in
+              Success) exit 0 ;;
+              Failed|Cancelled|TimedOut) aws ssm get-command-invocation --command-id "$command_id" --instance-id "$EC2_INSTANCE_ID" --query 'StandardErrorContent' --output text; exit 1 ;;
+            esac
+            sleep 10
+          done
+          echo "Timed out waiting for EC2 deployment"
+          exit 1
+

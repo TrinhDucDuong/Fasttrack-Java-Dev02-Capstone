@@ -1,0 +1,67 @@
+server:
+  port: ${SERVER_PORT:8082}
+
+spring:
+  application:
+    name: ai-service
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/study_coach?currentSchema=ai,public}
+    username: ${DB_USERNAME:study_coach}
+    password: ${DB_PASSWORD:study_coach}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        default_schema: ai
+        jdbc:
+          batch_size: 25
+  flyway:
+    default-schema: ai
+    schemas: ai
+    create-schemas: true
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:study_coach}
+    password: ${RABBITMQ_PASSWORD:study_coach}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,loggers
+
+app:
+  security:
+    jwt-secret: ${JWT_SECRET:c3R1ZHktY29hY2gtbG9jYWwtc2VjcmV0LWtleS1mb3ItZGV2ZWxvcG1lbnQ=}
+  ai:
+    mode: ${AI_MODE:remote}
+    base-url: ${AI_BASE_URL:https://api.groq.com/openai/v1}
+    api-key: ${GROQ_API_KEY:${AI_API_KEY:}}
+    chat-model: ${AI_CHAT_MODEL:openai/gpt-oss-120b}
+    embedding-dimensions: 1536
+    chunk-size: 900
+    chunk-overlap: 120
+    retrieval-limit: 5
+
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  flyway:
+    enabled: false

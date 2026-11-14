@@ -7,4 +7,5 @@ import java.util.Optional;
 
 public interface ICourseRepository extends JpaRepository<Course, Long> {
     Optional<Course> findBySlug(String slug);
+    java.util.List<Course> findByTitleContainingIgnoreCase(String title);
 }

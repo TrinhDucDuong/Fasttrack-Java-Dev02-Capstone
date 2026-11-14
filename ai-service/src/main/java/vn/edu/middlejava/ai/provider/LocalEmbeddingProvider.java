@@ -26,7 +26,7 @@ public class LocalEmbeddingProvider implements IEmbeddingProvider {
     public List<Double> embed(String text) {
         int dimensions = properties.getEmbeddingDimensions();
         double[] vector = new double[dimensions];
-        String[] tokens = text.toLowerCase(Locale.ROOT).split("[^\\p{L}\\p{N]+");
+        String[] tokens = text.toLowerCase(Locale.ROOT).split("[^\\p{L}\\p{N}]+");
         for (String token : tokens) {
             if (!token.isBlank()) {
                 vector[Math.floorMod(hash(token), dimensions)] += 1.0;

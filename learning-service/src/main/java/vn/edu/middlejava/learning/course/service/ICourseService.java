@@ -7,6 +7,7 @@ import java.util.List;
 
 public interface ICourseService {
     List<CourseResponse> getCourses();
+    List<CourseResponse> searchCourses(String query);
     List<UnitResponse> getUnits(Long courseId);
     UnitResponse getUnit(Long courseId, Long unitId);
 }

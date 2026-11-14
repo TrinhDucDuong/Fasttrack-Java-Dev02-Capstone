@@ -40,17 +40,17 @@ public class QuizController {
     }
 
     @GetMapping("/units/{unitId}")
-    public ResponseEntity<List<QuizResponse>> getForUnit(@PathVariable Long unitId) {
+    public ResponseEntity<List<QuizResponse>> getForUnit(@PathVariable("unitId") Long unitId) {
         return ResponseEntity.ok(quizService.getForUnit(unitId));
     }
 
     @GetMapping("/{quizId}")
-    public ResponseEntity<QuizResponse> get(@PathVariable Long quizId) {
+    public ResponseEntity<QuizResponse> get(@PathVariable("quizId") Long quizId) {
         return ResponseEntity.ok(quizService.get(quizId));
     }
 
     @PostMapping("/{quizId}/attempts")
-    public ResponseEntity<AttemptResponse> submit(@PathVariable Long quizId, @AuthenticationPrincipal Jwt jwt,
+    public ResponseEntity<AttemptResponse> submit(@PathVariable("quizId") Long quizId, @AuthenticationPrincipal Jwt jwt,
                                                   @Valid @RequestBody SubmitAttemptRequest request) {
         return ResponseEntity.ok(quizService.submit(Long.valueOf(jwt.getSubject()), quizId, request));
     }

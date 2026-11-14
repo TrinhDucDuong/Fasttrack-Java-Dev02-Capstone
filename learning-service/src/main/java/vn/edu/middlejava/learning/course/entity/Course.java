@@ -13,7 +13,7 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 @Entity
 @Table(name = "courses")
 @Cacheable
-@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class Course {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,6 +28,12 @@ public class Course {
     @Column(nullable = false, columnDefinition = "text")
     private String description;
 
+    @Column(name = "price", nullable = false)
+    private java.math.BigDecimal price = java.math.BigDecimal.ZERO;
+
+    @Column(name = "youtube_url", length = 500)
+    private String youtubeUrl;
+
     protected Course() {
     }
 
@@ -37,6 +43,21 @@ public class Course {
         this.description = description;
     }
 
+    public Course(String slug, String title, String description, java.math.BigDecimal price, String youtubeUrl) {
+        this(slug, title, description);
+        this.price = price;
+        this.youtubeUrl = youtubeUrl;
+    }
+
+    public void updateCatalog(String title, String description, java.math.BigDecimal price, String youtubeUrl) {
+        this.title = title;
+        this.description = description;
+        this.price = price;
+        this.youtubeUrl = youtubeUrl;
+    }
+
+    public java.math.BigDecimal getPrice() { return price; }
+    public String getYoutubeUrl() { return youtubeUrl; }
     public Long getId() { return id; }
     public String getSlug() { return slug; }
     public String getTitle() { return title; }

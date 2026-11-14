@@ -17,7 +17,7 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 @Entity
 @Table(name = "course_units", uniqueConstraints = @UniqueConstraint(columnNames = {"course_id", "unit_number"}))
 @Cacheable
-@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class CourseUnit {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

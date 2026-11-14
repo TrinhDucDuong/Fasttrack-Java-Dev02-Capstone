@@ -97,7 +97,7 @@ public class AuthServiceImpl implements IAuthService {
                 .expiresAt(expiresAt)
                 .subject(user.getId().toString())
                 .claim("email", user.getEmail())
-                .claim("roles", List.of("USER"))
+                .claim("roles", List.of("ROLE_" + user.getRole()))
                 .build();
         String accessToken = jwtEncoder.encode(JwtEncoderParameters.from(JwsHeader.with(MacAlgorithm.HS256).build(), claims)).getTokenValue();
         String refreshToken = UUID.randomUUID() + "." + UUID.randomUUID();

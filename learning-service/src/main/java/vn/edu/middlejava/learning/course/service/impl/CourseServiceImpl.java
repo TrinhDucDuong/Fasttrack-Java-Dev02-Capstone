@@ -31,6 +31,12 @@ public class CourseServiceImpl implements ICourseService {
     }
 
     @Override
+    public List<CourseResponse> searchCourses(String query) {
+        if (query == null || query.isBlank()) return getCourses();
+        return courseRepository.findByTitleContainingIgnoreCase(query.trim()).stream().map(courseMapper::toResponse).toList();
+    }
+
+    @Override
     public List<UnitResponse> getUnits(Long courseId) {
         if (!courseRepository.existsById(courseId)) {
             throw new ResourceNotFoundException("Course not found");

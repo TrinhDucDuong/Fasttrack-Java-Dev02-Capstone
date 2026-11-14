@@ -5,7 +5,7 @@ spring:
   application:
     name: ai-service
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/study_coach?currentSchema=ai,public}
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/study_coach?currentSchema=ai,public}
     username: ${DB_USERNAME:study_coach}
     password: ${DB_PASSWORD:study_coach}
     hikari:

@@ -25,6 +25,9 @@ public class StudyUser {
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
+    @Column(name = "role", nullable = false, length = 20)
+    private String role = "CUSTOMER";
+
     protected StudyUser() {
     }
 
@@ -34,6 +37,12 @@ public class StudyUser {
         this.createdAt = Instant.now();
     }
 
+    public StudyUser(String email, String passwordHash, String role) {
+        this(email, passwordHash);
+        this.role = role;
+    }
+
+    public String getRole() { return role; }
     public Long getId() { return id; }
     public String getEmail() { return email; }
     public String getPasswordHash() { return passwordHash; }

@@ -10,7 +10,7 @@ spring:
         - id: learning-service
           uri: lb://learning-service
           predicates:
-            - Path=/api/auth/**,/api/courses/**,/api/units/**,/api/quizzes/**,/api/progress/**
+            - Path=/api/auth/**,/api/courses/**,/api/admin/**,/api/units/**,/api/quizzes/**,/api/progress/**,/api/cart/**,/api/orders/**,/api/notifications/**
         - id: ai-service
           uri: lb://ai-service
           predicates:

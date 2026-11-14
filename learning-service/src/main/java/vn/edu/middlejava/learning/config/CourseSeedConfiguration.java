@@ -10,6 +10,7 @@ import vn.edu.middlejava.learning.course.repository.ICourseRepository;
 import vn.edu.middlejava.learning.course.repository.ICourseUnitRepository;
 
 import java.util.List;
+import java.math.BigDecimal;
 
 @Configuration
 public class CourseSeedConfiguration {
@@ -21,10 +22,16 @@ public class CourseSeedConfiguration {
     @Transactional
     void seed(ICourseRepository courses, ICourseUnitRepository units) {
         Course course = courses.findBySlug("middle-java").orElseGet(() -> courses.save(
-                new Course("middle-java", "Middle Java", "A practical learning path for Java backend engineering.")));
-        if (units.existsByCourseIdAndUnitNumber(course.getId(), 1)) {
-            return;
-        }
+                new Course("middle-java", "Middle Java", "A practical learning path for Java backend engineering.",
+                        new BigDecimal("29.99"), "https://www.youtube.com/watch?v=GoXwIVyNvX0")));
+        courses.findBySlug("spring-boot-microservices").orElseGet(() -> courses.save(
+                new Course("spring-boot-microservices", "Spring Boot Microservices",
+                        "Build production-style Java services with Spring Boot.", new BigDecimal("39.99"),
+                        "https://www.youtube.com/watch?v=9SGDpanrc8U")));
+        courses.findBySlug("java-fundamentals").orElseGet(() -> courses.save(
+                new Course("java-fundamentals", "Java Fundamentals",
+                        "Core Java and object-oriented programming for backend developers.", new BigDecimal("19.99"),
+                        "https://www.youtube.com/watch?v=GoXwIVyNvX0")));
         List<String[]> syllabus = List.of(
                 new String[]{"SOLID Principles", "Clean Code; SRP; OCP; LSP; ISP; DIP"},
                 new String[]{"Object-Oriented Programming and Refactoring", "Extract Method; Extract Class; Replace Conditional with Polymorphism"},
@@ -43,7 +50,10 @@ public class CourseSeedConfiguration {
         );
         for (int index = 0; index < syllabus.size(); index++) {
             String[] row = syllabus.get(index);
-            units.save(new CourseUnit(course, index + 1, row[0], row[1]));
+            int unitNumber = index + 1;
+            if (!units.existsByCourseIdAndUnitNumber(course.getId(), unitNumber)) {
+                units.save(new CourseUnit(course, unitNumber, row[0], row[1]));
+            }
         }
     }
 }

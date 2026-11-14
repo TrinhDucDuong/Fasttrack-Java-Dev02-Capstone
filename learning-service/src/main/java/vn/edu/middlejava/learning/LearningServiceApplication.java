@@ -10,6 +10,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableDiscoveryClient
 @ConfigurationPropertiesScan
 @SpringBootApplication
+@org.springframework.scheduling.annotation.EnableAsync
 public class LearningServiceApplication {
     public static void main(String[] args) {
         SpringApplication.run(LearningServiceApplication.class, args);

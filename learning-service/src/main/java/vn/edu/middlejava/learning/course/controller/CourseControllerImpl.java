@@ -26,15 +26,21 @@ public class CourseControllerImpl implements ICourseController {
         return ResponseEntity.ok(courseService.getCourses());
     }
 
+    @GetMapping(params = "search")
+    public ResponseEntity<List<CourseResponse>> search(@org.springframework.web.bind.annotation.RequestParam("search") String search) {
+        return ResponseEntity.ok(courseService.searchCourses(search));
+    }
+
     @Override
     @GetMapping("/{courseId}/units")
-    public ResponseEntity<List<UnitResponse>> getUnits(@PathVariable Long courseId) {
+    public ResponseEntity<List<UnitResponse>> getUnits(@PathVariable("courseId") Long courseId) {
         return ResponseEntity.ok(courseService.getUnits(courseId));
     }
 
     @Override
     @GetMapping("/{courseId}/units/{unitId}")
-    public ResponseEntity<UnitResponse> getUnit(@PathVariable Long courseId, @PathVariable Long unitId) {
+    public ResponseEntity<UnitResponse> getUnit(@PathVariable("courseId") Long courseId,
+                                                @PathVariable("unitId") Long unitId) {
         return ResponseEntity.ok(courseService.getUnit(courseId, unitId));
     }
 }

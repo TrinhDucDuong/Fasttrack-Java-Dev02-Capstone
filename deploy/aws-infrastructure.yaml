@@ -22,8 +22,8 @@ Parameters:
     AllowedPattern: "^[a-zA-Z0-9]+$"
   InstanceType:
     Type: String
-    Default: t3.medium
-    AllowedValues: [t3.medium, t3.small]
+    Default: c7i-flex.large
+    AllowedValues: [c7i-flex.large, m7i-flex.large]
   GitHubRepository:
     Type: String
     Default: TrinhDucDuong/Fasttrack-Java-Dev02-Capstone
@@ -483,8 +483,6 @@ Resources:
       MetadataOptions:
         HttpEndpoint: enabled
         HttpTokens: required
-      CreditSpecification:
-        CPUCredits: standard
       BlockDeviceMappings:
         - DeviceName: /dev/xvda
           Ebs:

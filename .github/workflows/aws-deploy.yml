@@ -75,10 +75,11 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
         run: |
           test -n "$EC2_INSTANCE_ID"
+          remote_command="set -e; cd /opt/study-coach; git fetch origin main; git checkout -f main; git reset --hard '$IMAGE_TAG'; AWS_REGION='$AWS_REGION' bash /opt/study-coach/deploy/deploy-compose.sh '$IMAGE_TAG'"
           command_id="$(aws ssm send-command \
             --instance-ids "$EC2_INSTANCE_ID" \
             --document-name AWS-RunShellScript \
-            --parameters "commands=AWS_REGION=$AWS_REGION bash /opt/study-coach/deploy/deploy-compose.sh $IMAGE_TAG" \
+            --parameters "commands=$remote_command" \
             --query 'Command.CommandId' --output text)"
           for attempt in $(seq 1 120); do
             status="$(aws ssm get-command-invocation --command-id "$command_id" --instance-id "$EC2_INSTANCE_ID" --query Status --output text 2>/dev/null || true)"

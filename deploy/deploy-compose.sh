@@ -8,6 +8,15 @@ ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
 ECR_REGISTRY="${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com"
 
 cd "$APP_DIR"
+if ! command -v docker-compose >/dev/null 2>&1; then
+  if [ -x /usr/local/lib/docker/cli-plugins/docker-compose ]; then
+    install -m 0755 /usr/local/lib/docker/cli-plugins/docker-compose /usr/local/bin/docker-compose
+  else
+    echo "Docker Compose executable is missing"
+    exit 127
+  fi
+fi
+
 git fetch origin main
 git checkout -f main
 git reset --hard "$IMAGE_TAG"
@@ -36,8 +45,8 @@ chmod 600 "$env_file"
 mv "$env_file" "$APP_DIR/.env"
 trap - EXIT
 
-docker compose --env-file "$APP_DIR/.env" -f deploy/docker-compose.aws.yml pull
-docker compose --env-file "$APP_DIR/.env" -f deploy/docker-compose.aws.yml up -d --remove-orphans
+docker-compose --env-file "$APP_DIR/.env" -f deploy/docker-compose.aws.yml pull
+docker-compose --env-file "$APP_DIR/.env" -f deploy/docker-compose.aws.yml up -d --remove-orphans
 for attempt in $(seq 1 90); do
   if curl -fsS http://localhost:8080/actuator/health | grep -q '"status":"UP"'; then
     docker image prune -af --filter 'until=168h'

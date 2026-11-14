@@ -8,11 +8,10 @@ systemctl enable --now crond
 usermod -aG docker ec2-user
 
 compose_version=v5.7.1
-install -d -m 0755 /usr/local/lib/docker/cli-plugins
-curl -fsSL "https://github.com/docker/compose/releases/download/${compose_version}/docker-compose-linux-x86_64" -o /usr/local/lib/docker/cli-plugins/docker-compose
+curl -fsSL "https://github.com/docker/compose/releases/download/${compose_version}/docker-compose-linux-x86_64" -o /tmp/docker-compose-linux-x86_64
 curl -fsSL "https://github.com/docker/compose/releases/download/${compose_version}/checksums.txt" -o /tmp/docker-compose-checksums.txt
-(cd /usr/local/lib/docker/cli-plugins && grep 'docker-compose-linux-x86_64$' /tmp/docker-compose-checksums.txt | sha256sum --check --status)
-chmod 0755 /usr/local/lib/docker/cli-plugins/docker-compose
+(cd /tmp && grep 'docker-compose-linux-x86_64$' docker-compose-checksums.txt | sha256sum --check --status)
+install -m 0755 /tmp/docker-compose-linux-x86_64 /usr/local/bin/docker-compose
 
 install -d -o ec2-user -g ec2-user /opt/study-coach
 if [ ! -d /opt/study-coach/.git ]; then

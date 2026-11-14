@@ -12,8 +12,11 @@ if ! command -v docker-compose >/dev/null 2>&1; then
   if [ -x /usr/local/lib/docker/cli-plugins/docker-compose ]; then
     install -m 0755 /usr/local/lib/docker/cli-plugins/docker-compose /usr/local/bin/docker-compose
   else
-    echo "Docker Compose executable is missing"
-    exit 127
+    compose_version=v5.7.1
+    curl -fsSL "https://github.com/docker/compose/releases/download/${compose_version}/docker-compose-linux-x86_64" -o /tmp/docker-compose-linux-x86_64
+    curl -fsSL "https://github.com/docker/compose/releases/download/${compose_version}/checksums.txt" -o /tmp/docker-compose-checksums.txt
+    (cd /tmp && grep 'docker-compose-linux-x86_64$' docker-compose-checksums.txt | sha256sum --check --status)
+    install -m 0755 /tmp/docker-compose-linux-x86_64 /usr/local/bin/docker-compose
   fi
 fi
 

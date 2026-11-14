@@ -537,6 +537,20 @@ Resources:
         - Key: Project
           Value: study-coach
 
+  DatabaseHostParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /studycoach/prod/db-host
+      Type: String
+      Value: !GetAtt Database.Endpoint.Address
+
+  BackupBucketParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /studycoach/prod/backup-bucket
+      Type: String
+      Value: !Ref BackupBucket
+
 Outputs:
   PublicUrl:
     Description: Public HTTPS URL for the application

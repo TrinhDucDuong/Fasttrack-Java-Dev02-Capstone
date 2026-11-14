@@ -28,6 +28,14 @@ Parameters:
     Type: String
     Default: TrinhDucDuong/Fasttrack-Java-Dev02-Capstone
 
+  GitHubConnectionArn:
+    Type: String
+    Description: Available CodeConnections GitHub App connection for this repository
+  GitHubActorId:
+    Type: String
+    Default: "165433660"
+    AllowedPattern: "^[0-9]+$"
+
 Resources:
   Vpc:
     Type: AWS::EC2::VPC
@@ -283,35 +291,23 @@ Resources:
         - Key: Project
           Value: study-coach
 
-  GithubOidcProvider:
-    Type: AWS::IAM::OIDCProvider
-    Properties:
-      Url: https://token.actions.githubusercontent.com
-      ClientIdList:
-        - sts.amazonaws.com
-      ThumbprintList:
-        - 6938fd4d98bab03faadb97b34396831e3780aea1
-      Tags:
-        - Key: Project
-          Value: study-coach
-
   GitHubDeployRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: study-coach-github-deploy
-      Description: GitHub Actions deployment role limited to the capstone main branch
+      RoleName: study-coach-codebuild-deploy
+      Description: Deployment permissions for the repository-specific ephemeral CodeBuild runner
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
           - Effect: Allow
             Principal:
-              Federated: !Ref GithubOidcProvider
-            Action: sts:AssumeRoleWithWebIdentity
+              Service: codebuild.amazonaws.com
+            Action: sts:AssumeRole
             Condition:
               StringEquals:
-                token.actions.githubusercontent.com:aud: sts.amazonaws.com
-              StringLike:
-                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubRepository}:ref:refs/heads/main
+                aws:SourceAccount: !Ref AWS::AccountId
+              ArnEquals:
+                aws:SourceArn: !Sub arn:${AWS::Partition}:codebuild:${AWS::Region}:${AWS::AccountId}:project/study-coach-deploy
       Policies:
         - PolicyName: deploy-study-coach
           PolicyDocument:
@@ -349,15 +345,76 @@ Resources:
                 Effect: Allow
                 Action: ssm:SendCommand
                 Resource:
-                  - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}::document/AWS-RunShellScript
                   - !Sub arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:instance/*
                 Condition:
                   StringEquals:
                     ssm:resourceTag/Project: study-coach
+              - Sid: RunDeploymentDocument
+                Effect: Allow
+                Action: ssm:SendCommand
+                Resource: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}::document/AWS-RunShellScript
+              - Sid: UseRepositoryConnection
+                Effect: Allow
+                Action:
+                  - codeconnections:GetConnection
+                  - codeconnections:GetConnectionToken
+                  - codeconnections:UseConnection
+                Resource: !Ref GitHubConnectionArn
+              - Sid: WriteBuildLogs
+                Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !GetAtt BuildLogGroup.Arn
               - Sid: ReadDeploymentStatus
                 Effect: Allow
                 Action: ssm:GetCommandInvocation
                 Resource: "*"
+      Tags:
+        - Key: Project
+          Value: study-coach
+
+  BuildLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/codebuild/study-coach-deploy
+      RetentionInDays: 7
+
+  DeployRunner:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: study-coach-deploy
+      Description: Ephemeral GitHub Actions deployment runner for the capstone repository
+      ServiceRole: !GetAtt GitHubDeployRole.Arn
+      ConcurrentBuildLimit: 1
+      TimeoutInMinutes: 30
+      QueuedTimeoutInMinutes: 30
+      Artifacts:
+        Type: NO_ARTIFACTS
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:7.0
+        PrivilegedMode: true
+      Source:
+        Type: GITHUB
+        Location: !Sub https://github.com/${GitHubRepository}.git
+        Auth:
+          Type: CODECONNECTIONS
+          Resource: !Ref GitHubConnectionArn
+      Triggers:
+        Webhook: true
+        FilterGroups:
+          - - Type: EVENT
+              Pattern: WORKFLOW_JOB_QUEUED
+            - Type: WORKFLOW_NAME
+              Pattern: ^CI and deploy to AWS$
+            - Type: ACTOR_ACCOUNT_ID
+              Pattern: !Sub ^${GitHubActorId}$
+      LogsConfig:
+        CloudWatchLogs:
+          Status: ENABLED
+          GroupName: !Ref BuildLogGroup
       Tags:
         - Key: Project
           Value: study-coach
@@ -486,8 +543,8 @@ Outputs:
     Value: !Sub
       - https://${DomainName}
       - DomainName: !GetAtt CloudFrontDistribution.DomainName
-  GithubDeployRoleArn:
-    Description: Store as repository secret AWS_ROLE_ARN
+  CodeBuildDeployRoleArn:
+    Description: Service role used by the ephemeral deployment runner
     Value: !GetAtt GitHubDeployRole.Arn
   InstanceId:
     Description: Store as repository variable EC2_INSTANCE_ID

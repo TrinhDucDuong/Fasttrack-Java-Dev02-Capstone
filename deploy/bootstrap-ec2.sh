@@ -2,7 +2,7 @@
 set -euo pipefail
 
 dnf update -y
-dnf install -y docker git awscli curl cronie
+dnf install -y docker git cronie
 systemctl enable --now docker
 systemctl enable --now crond
 usermod -aG docker ec2-user
@@ -20,7 +20,7 @@ if [ ! -d /opt/study-coach/.git ]; then
 fi
 
 cat > /etc/cron.d/study-coach-backup <<'CRON'
-0 18 * * * root /opt/study-coach/deploy/backup-db-to-s3.sh >> /var/log/study-coach-backup.log 2>&1
+0 18 * * * root bash /opt/study-coach/deploy/backup-db-to-s3.sh >> /var/log/study-coach-backup.log 2>&1
 CRON
 chmod 0644 /etc/cron.d/study-coach-backup
 

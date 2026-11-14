@@ -1,6 +1,7 @@
 name: CI and deploy to AWS
 
 on:
+  workflow_dispatch:
   pull_request:
     branches: [main]
   push:
@@ -11,7 +12,7 @@ permissions:
 
 concurrency:
   group: study-coach-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   verify:
@@ -26,12 +27,12 @@ jobs:
       - run: mvn -B verify
 
   deploy:
-    if: github.event_name == 'push' && vars.AWS_DEPLOY_ENABLED == 'true'
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.AWS_DEPLOY_ENABLED == 'true'
     needs: verify
-    runs-on: ubuntu-latest
+    runs-on: codebuild-study-coach-deploy-${{ github.run_id }}-${{ github.run_attempt }}
+    timeout-minutes: 30
     permissions:
       contents: read
-      id-token: write
     env:
       AWS_REGION: ${{ vars.AWS_REGION }}
       EC2_INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
@@ -43,10 +44,6 @@ jobs:
           java-version: '17'
           cache: maven
       - run: mvn -B -DskipTests package
-      - uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ vars.AWS_REGION }}
       - name: Log in to Amazon ECR
         id: ecr
         shell: bash
@@ -81,9 +78,9 @@ jobs:
           command_id="$(aws ssm send-command \
             --instance-ids "$EC2_INSTANCE_ID" \
             --document-name AWS-RunShellScript \
-            --parameters "commands=AWS_REGION=$AWS_REGION /opt/study-coach/deploy/deploy-compose.sh $IMAGE_TAG" \
+            --parameters "commands=AWS_REGION=$AWS_REGION bash /opt/study-coach/deploy/deploy-compose.sh $IMAGE_TAG" \
             --query 'Command.CommandId' --output text)"
-          for attempt in $(seq 1 60); do
+          for attempt in $(seq 1 120); do
             status="$(aws ssm get-command-invocation --command-id "$command_id" --instance-id "$EC2_INSTANCE_ID" --query Status --output text 2>/dev/null || true)"
             case "$status" in
               Success) exit 0 ;;

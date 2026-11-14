@@ -10,11 +10,11 @@ ECR_REGISTRY="${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com"
 cd "$APP_DIR"
 git fetch origin main
 git checkout -f main
-git reset --hard origin/main
+git reset --hard "$IMAGE_TAG"
 aws ecr get-login-password --region "$REGION" | docker login --username AWS --password-stdin "$ECR_REGISTRY"
 
 get_parameter() {
-  aws ssm get-parameter --name "/studycoach/prod/$1" --with-decryption --query 'Parameter.Value' --output text
+  aws ssm get-parameter --region "$REGION" --name "/studycoach/prod/$1" --with-decryption --query 'Parameter.Value' --output text
 }
 
 env_file="$(mktemp "$APP_DIR/.env.XXXXXX")"
@@ -38,5 +38,12 @@ trap - EXIT
 
 docker compose --env-file "$APP_DIR/.env" -f deploy/docker-compose.aws.yml pull
 docker compose --env-file "$APP_DIR/.env" -f deploy/docker-compose.aws.yml up -d --remove-orphans
-docker image prune -af --filter 'until=168h'
-
+for attempt in $(seq 1 90); do
+  if curl -fsS http://localhost:8080/actuator/health | grep -q '"status":"UP"'; then
+    docker image prune -af --filter 'until=168h'
+    exit 0
+  fi
+  sleep 5
+done
+echo "Gateway did not become healthy"
+exit 1

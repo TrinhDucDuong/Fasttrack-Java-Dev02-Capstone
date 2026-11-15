@@ -9,5 +9,3 @@ target/
 
 # Demo run outputs (contain throwaway tokens)
 demo/output/
-demo/video/
-build-video/

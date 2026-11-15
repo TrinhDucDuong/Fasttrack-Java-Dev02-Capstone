@@ -1,5 +1,0 @@
-{"baseUrl": "https://github.com/TrinhDucDuong/Fasttrack-Java-Dev02-Capstone", "viewport": {"width": 1600, "height": 900},
- "steps": [
-  {"goto": "/actions/runs/43676180018", "wait": 5000, "shot": "gh-run", "boxes": ["text:Success", "text:verify", "text:deploy"]},
-  {"goto": "/actions", "wait": 5000, "shot": "gh-actions", "boxes": ["text:CI and deploy to AWS"]}
- ]}

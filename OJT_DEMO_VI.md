@@ -7,7 +7,7 @@ Hệ thống bán các khóa Java quay sẵn: sản phẩm là khóa học, vide
 | `demo/BAO_CAO_OJT.md` | Báo cáo: kiến thức nào ở chức năng nào, SOLID, Design Pattern và lý do chọn |
 | `demo/postman/` | Postman collection (38 request, có test script tự lưu token và id) + environment LOCAL và AWS |
 | `demo/run_demo.py` | Chạy toàn bộ kịch bản bằng một lệnh, dùng để tập dượt hoặc kiểm tra trước khi quay |
-| `demo/SCRIPT_NOI.md` | Script nói có mốc thời gian, khớp với video `demo/video/MiddleJavaStore_Demo.mp4` |
+| `demo/SCRIPT_NOI.md` | Kịch bản thuyết trình theo từng phần của video demo |
 | `api-gateway/src/main/resources/static/index.html` | Giao diện web tối giản cho CUSTOMER và ADMIN |
 
 ## 1. Chuẩn bị môi trường local

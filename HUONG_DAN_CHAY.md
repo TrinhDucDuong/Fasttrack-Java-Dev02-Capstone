@@ -1,4 +1,4 @@
-# Hướng dẫn chạy và demo OJT — Middle Java Store (E-Commerce Mini)
+# Hướng dẫn chạy và kiểm tra — Middle Java Store (E-Commerce Mini)
 
 Hệ thống bán các khóa Java quay sẵn: sản phẩm là khóa học, video nằm trên YouTube. Khách đăng ký, tìm khóa học, thêm vào giỏ, đặt hàng và thanh toán (VNPay giả lập, COD, chuyển khoản). Khi đã thanh toán, khách được mở quyền xem video. ADMIN quản lý sản phẩm và xác nhận thanh toán cho đơn COD hoặc chuyển khoản. Mỗi lần trạng thái đơn đổi, hệ thống gửi thông báo.
 
@@ -40,9 +40,9 @@ java -jar api-gateway/target/api-gateway-1.0.0.jar
 - Gateway: `http://localhost:8080`. Health check: `/actuator/health`. Mở `http://localhost:8080/` để xem giao diện web.
 - Tài khoản ADMIN local `admin@middlejava.local` / `Admin123!Local` chỉ dùng cho máy local.
 
-## 2. Demo local bằng Postman
+## 2. Kiểm tra API trên local bằng Postman
 
-Import `demo/postman/MiddleJavaStore.postman_collection.json` và `demo/postman/local.postman_environment.json`, chọn environment **Middle Java Store - LOCAL**. Mỗi lần demo nên đổi biến `customerEmail` sang một email mới. Bấm **Send** lần lượt từ trên xuống; test script tự lưu `accessToken`, `adminToken`, `courseId`, `newCourseId`, `codOrderId`.
+Import `demo/postman/MiddleJavaStore.postman_collection.json` và `demo/postman/local.postman_environment.json`, chọn environment **Middle Java Store - LOCAL**. Mỗi lần chạy lại nên đổi biến `customerEmail` sang một email mới. Bấm **Send** lần lượt từ trên xuống; test script tự lưu `accessToken`, `adminToken`, `courseId`, `newCourseId`, `codOrderId`.
 
 | # | Request | Kết quả cần chỉ ra | Kiến thức / pattern |
 |---|---|---|---|
@@ -72,7 +72,7 @@ Import `demo/postman/MiddleJavaStore.postman_collection.json` và `demo/postman/
 
 Muốn chứng minh observer chạy bất đồng bộ, mở log của `learning-service` sau bước 5.3. Request đặt hàng chạy trên thread `nio-8081-exec-*`, còn `[EMAIL]` và `[IN_APP]` chạy trên `order-notify-1/2`.
 
-## 3. Demo trên AWS
+## 3. Chạy trên AWS
 
 - URL công khai: **https://d3jaw9bd80q6ki.cloudfront.net** (CloudFront → EC2 chạy Docker Compose, RDS PostgreSQL, image trên ECR).
 - CI/CD: mỗi lần push lên `main`, GitHub Actions chạy `mvn verify`. Test xanh thì build 4 image, đẩy lên ECR và deploy lên EC2 qua SSM.
@@ -129,4 +129,4 @@ Kiểm thử: `CourseVideoAdminServiceImplTest`, `CourseEnrollmentServiceImplTes
 
 ## Phụ lục — Chatbot trợ lý RAG (ngoài phạm vi đề bài)
 
-`POST /api/materials` tạo tài liệu cho một unit (`courseId`, `unitId`, `title`, `content`). RabbitMQ chuyển yêu cầu indexing cho worker; worker tách chunk và lưu embedding vào pgvector. Gọi `GET /api/materials/{id}` đến khi trạng thái là `READY`, rồi `POST /api/ai/ask` với `unitId` và `question`. Response có câu trả lời và danh sách `sources`. API key Groq chỉ nằm trong biến môi trường hoặc Parameter Store, không đưa lên màn hình demo.
+`POST /api/materials` tạo tài liệu cho một unit (`courseId`, `unitId`, `title`, `content`). RabbitMQ chuyển yêu cầu indexing cho worker; worker tách chunk và lưu embedding vào pgvector. Gọi `GET /api/materials/{id}` đến khi trạng thái là `READY`, rồi `POST /api/ai/ask` với `unitId` và `question`. Response có câu trả lời và danh sách `sources`. API key Groq chỉ nằm trong biến môi trường hoặc Parameter Store, không ghi vào source code.

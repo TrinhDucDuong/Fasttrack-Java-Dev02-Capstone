@@ -1,23 +1,25 @@
-# Kịch bản OJT — Middle Java Course Store
+# Kịch bản demo OJT — Middle Java Store (E-Commerce Mini)
 
-## Mục tiêu và câu chuyện
+Hệ thống bán các khóa Java quay sẵn: sản phẩm là khóa học, video nằm trên YouTube. Khách đăng ký, tìm khóa học, thêm vào giỏ, đặt hàng và thanh toán (VNPay giả lập, COD, chuyển khoản). Khi đã thanh toán, khách được mở quyền xem video. ADMIN quản lý sản phẩm và xác nhận thanh toán cho đơn COD hoặc chuyển khoản. Mỗi lần trạng thái đơn đổi, hệ thống gửi thông báo.
 
-Hệ thống bán các khóa Java quay sẵn. Sản phẩm gồm thông tin khóa học, giá và đường dẫn YouTube; video được lưu tại YouTube. Sau khi thanh toán thành công, API cấp quyền học và trả về URL dạng iframe. Trợ lý AI trả lời câu hỏi dựa trên tài liệu của từng unit bằng RAG.
+| Tài liệu | Nội dung |
+|---|---|
+| `demo/BAO_CAO_OJT.md` | Báo cáo: kiến thức nào ở chức năng nào, SOLID, Design Pattern và lý do chọn |
+| `demo/postman/` | Postman collection (33 request, có test script tự lưu token và id) + environment LOCAL và AWS |
+| `demo/run_demo.py` | Chạy toàn bộ kịch bản bằng một lệnh, dùng để tập dượt hoặc kiểm tra trước khi quay |
+| `demo/SCRIPT_NOI.md` | Script nói có mốc thời gian, khớp với video `demo/video/MiddleJavaStore_Demo.mp4` |
+| `api-gateway/src/main/resources/static/index.html` | Giao diện web tối giản cho CUSTOMER và ADMIN |
 
-Demo thực hiện bằng Postman gọi API qua API Gateway, đúng phạm vi đề bài không yêu cầu UI.
+## 1. Chuẩn bị môi trường local
 
-## Chuẩn bị chạy local
-
-Yêu cầu Java 17, Maven và Docker Desktop đang chạy.
+Yêu cầu: Java 17, Maven, Docker Desktop đang chạy.
 
 ```powershell
 docker compose up -d postgres rabbitmq
 mvn -B clean verify
 ```
 
-Maven chạy toàn bộ test và tạo các JAR. PostgreSQL chạy ở `localhost:5433`, RabbitMQ ở `localhost:5672`, giao diện quản trị RabbitMQ ở `http://localhost:15672`.
-
-Mở bốn cửa sổ PowerShell tại thư mục project và chạy theo thứ tự:
+`mvn verify` chạy toàn bộ test (unit test Mockito + integration test PostgreSQL/RabbitMQ bằng Testcontainers) và build JAR. Sau đó mở 4 cửa sổ PowerShell và chạy theo thứ tự:
 
 ```powershell
 java -jar discovery-server/target/discovery-server-1.0.0.jar
@@ -30,7 +32,6 @@ java -jar learning-service/target/learning-service-1.0.0.jar
 ```
 
 ```powershell
-# Đặt GROQ_API_KEY trong môi trường trước khi chạy service; không ghi key vào file hoặc video demo.
 java -jar ai-service/target/ai-service-1.0.0.jar
 ```
 
@@ -38,172 +39,80 @@ java -jar ai-service/target/ai-service-1.0.0.jar
 java -jar api-gateway/target/api-gateway-1.0.0.jar
 ```
 
-Gateway nhận request tại `http://localhost:8080`. Health check: `GET http://localhost:8080/actuator/health`. Tài khoản ADMIN trên cấu hình local demo là `admin@middlejava.local` / `Admin123!Local`; chỉ dùng ở máy local demo.
+- Gateway: `http://localhost:8080`. Health check: `/actuator/health`. Mở `http://localhost:8080/` để xem giao diện web.
+- Tài khoản ADMIN local `admin@middlejava.local` / `Admin123!Local` chỉ dùng cho máy local.
+- Tập dượt nhanh trước khi quay: `python demo/run_demo.py --env local`. Lệnh in ra 32 bước, bước nào cũng phải `OK`.
 
-## Postman — thứ tự thao tác
+## 2. Demo local bằng Postman
 
-Tạo Postman environment với các biến `baseUrl=http://localhost:8080`, `accessToken`, `adminToken`, `courseId`, `paidCourseId`, `unitId`, `orderId` và `materialId`. Với request cần đăng nhập, thêm header `Authorization: Bearer {{accessToken}}`; request quản trị dùng `{{adminToken}}`.
+Import `demo/postman/MiddleJavaStore.postman_collection.json` và `demo/postman/local.postman_environment.json`, chọn environment **Middle Java Store - LOCAL**. Mỗi lần quay nên đổi biến `customerEmail` sang một email mới. Bấm **Send** lần lượt từ trên xuống; test script tự lưu `accessToken`, `adminToken`, `courseId`, `newCourseId`, `codOrderId`.
 
-### 1. Health, catalog và tìm kiếm
+| # | Request | Kết quả cần chỉ ra | Kiến thức / pattern |
+|---|---|---|---|
+| 1.1 | `GET /actuator/health` | `status: UP` | API Gateway + Eureka |
+| 1.2 | `GET /api/courses` | Có giá, **không** có link video | DTO tách khỏi entity |
+| 1.3 | `GET /api/courses?search=java` | Lọc theo tên | JPA query + index GIN trigram (V2) |
+| 2.1–2.2 | Đăng ký, đăng nhập CUSTOMER | 201 / 200, có `accessToken` | Spring Security + JWT |
+| 2.3 | CUSTOMER gọi `POST /api/admin/courses` | **403** | Phân quyền ADMIN/CUSTOMER |
+| 2.4 | Đăng nhập ADMIN | `adminToken` | |
+| 3.1–3.3 | ADMIN tạo, sửa giá, xem danh sách sản phẩm | 201 / 200, admin thấy `youtubeUrl`, `active` | SRP: `CatalogAdminServiceImpl` |
+| 4.1–4.5 | Thêm 2 khóa, sửa số lượng = 2, xóa 1 khóa, xem giỏ | `total` được tính lại, xóa trả 204 | Extract Method / Extract Class |
+| 5.1 | `GET /api/orders/payment-methods` | `BANK_TRANSFER, COD, VNPAY` | Factory tự nhận strategy (OCP) |
+| 5.2 | Xem video trước khi mua | **403** | |
+| 5.3 | `POST /api/orders` `{"paymentMethod":"VNPAY"}` | `PAID`, `paymentReference: VNP…`, `CONFIRMED` | `@Transactional`, Strategy + Factory Method |
+| 5.4–5.5 | Giỏ đã trống, video trả `youtubeEmbedUrl` | | |
+| 5.6 | `GET /api/notifications` | Thông báo "Order #… has been created" | Observer + CompletableFuture |
+| 6.1–6.3 | Thêm Java Fundamentals, đặt hàng COD, xem video | `PENDING / AWAITING_PAYMENT`, video **403** | Strategy khác, cùng hợp đồng |
+| 6.4–6.5 | ADMIN xem tất cả đơn, xác nhận thanh toán | `PAID / CONFIRMED` | `AdminOrderServiceImpl` |
+| 6.6 | Xác nhận lần 2 | **409 Conflict** | |
+| 6.7–6.9 | Video 200, thông báo "Payment … confirmed", lịch sử đơn | | Observer gửi khi đổi trạng thái |
+| 7.1 | Đặt hàng khi giỏ trống | **400** `Cart is empty` | `Optional.filter().orElseThrow()` |
+| 7.2–7.3 | ADMIN ngừng bán sản phẩm, catalog không còn sản phẩm đó | 204 | Soft delete (V5) |
 
-| Method | URL | Kết quả cần thấy |
-|---|---|---|
-| GET | `{{baseUrl}}/actuator/health` | `status: UP` |
-| GET | `{{baseUrl}}/api/courses` | Danh sách khóa học và giá; response công khai không chứa URL video |
-| GET | `{{baseUrl}}/api/courses?search=Java` | Tìm khóa học theo title |
+Muốn chứng minh observer chạy bất đồng bộ, mở log của `learning-service` sau bước 5.3. Request đặt hàng chạy trên thread `nio-8081-exec-*`, còn `[EMAIL]` và `[IN_APP]` chạy trên `order-notify-1/2`.
 
-Lấy id của khóa đầu tiên gán `courseId`, khóa thứ hai gán `paidCourseId`.
+## 3. Demo trên AWS
 
-### 2. Đăng ký, đăng nhập và phân quyền
+- URL công khai: **https://d3jaw9bd80q6ki.cloudfront.net** (CloudFront → EC2 chạy Docker Compose, RDS PostgreSQL, image trên ECR).
+- CI/CD: mỗi lần push lên `main`, GitHub Actions chạy `mvn verify`. Test xanh thì build 4 image, đẩy lên ECR và deploy lên EC2 qua SSM.
+- Tài khoản ADMIN trên cloud: email là repository variable `ADMIN_EMAIL`, mật khẩu là secret `ADMIN_PASSWORD`. Pipeline chép cả hai vào AWS Parameter Store. Không đưa mật khẩu lên màn hình hoặc vào file export của Postman.
 
-Đăng ký CUSTOMER:
+**Bằng giao diện web** (mở URL trên ở bất kỳ trình duyệt nào):
 
-```http
-POST {{baseUrl}}/api/auth/register
-Content-Type: application/json
+1. Đăng ký một tài khoản CUSTOMER, tìm "java", thêm 2 khóa vào giỏ, đổi số lượng, xóa 1 khóa.
+2. Chọn **VNPAY** rồi **Đặt hàng**. Sang tab **Đơn hàng**: đơn `PAID`, có mã `VNP…`. Bấm **Xem video**.
+3. Tab **Thông báo** có thông báo của đơn vừa đặt.
+4. Đặt thêm một đơn **COD**, đơn ở trạng thái chờ thanh toán.
+5. Đăng xuất, đăng nhập ADMIN. Tab **Quản lý đơn hàng**: bấm **Xác nhận đã thanh toán** cho đơn COD. Tab **Quản lý sản phẩm**: thêm, sửa, ngừng bán.
+6. Đăng nhập lại CUSTOMER: đơn COD đã `PAID`, xem được video, có thêm thông báo xác nhận.
+
+**Bằng Postman:** chọn environment **Middle Java Store - AWS** (`demo/postman/cloud.postman_environment.json`), điền `adminPassword` ngay trong Postman (đừng lưu vào file), rồi chạy cùng collection như ở local.
+
+Chạy kiểm tra cloud bằng script (phần CUSTOMER chạy được khi chưa đặt mật khẩu admin):
+
+```powershell
+python demo/run_demo.py --env cloud --base-url https://d3jaw9bd80q6ki.cloudfront.net
+$env:ADMIN_EMAIL = '<email admin>'; $env:ADMIN_PASSWORD = '<mật khẩu admin>'
+python demo/run_demo.py --env cloud --base-url https://d3jaw9bd80q6ki.cloudfront.net
 ```
 
-```json
-{"email":"customer.demo@example.com","password":"DemoPassword123!"}
-```
+## 4. Đường dẫn code để thuyết trình
 
-Đăng nhập bằng `POST {{baseUrl}}/api/auth/login` với cùng body. Lưu `accessToken` vào biến `accessToken`. Khi demo local, đăng nhập bằng tài khoản ADMIN local đã nêu ở phần chuẩn bị. Khi demo AWS, đăng nhập bằng tài khoản ADMIN đã được cấu hình trong GitHub Actions/AWS Parameter Store. Lưu token ADMIN vào `adminToken`; không lưu mật khẩu vào Postman collection export.
-
-Gọi `POST {{baseUrl}}/api/admin/courses` bằng `accessToken` của CUSTOMER; kết quả mong đợi là `403 Forbidden`. Gọi `GET {{baseUrl}}/api/courses/{{courseId}}/units` bằng token hợp lệ, lấy id unit đầu tiên lưu vào `unitId`.
-
-### 3. Quản trị catalog
-
-Gọi `PUT {{baseUrl}}/api/admin/courses/{{courseId}}` bằng `adminToken` để cập nhật sản phẩm. Body mẫu dùng thông tin course seed:
-
-```json
-{
-  "slug": "middle-java",
-  "title": "Middle Java",
-  "description": "A practical learning path for Java backend engineering.",
-  "price": 29.99,
-  "youtubeUrl": "https://www.youtube.com/watch?v=GoXwIVyNvX0"
-}
-```
-
-Kết quả trả về từ admin API có URL YouTube để quản trị. Catalog công khai vẫn không trả về link video.
-
-### 4. Giỏ hàng và thanh toán
-
-Thêm sản phẩm bằng `POST {{baseUrl}}/api/cart/items`:
-
-```json
-{"courseId": {{courseId}}, "quantity": 1}
-```
-
-Thay đổi số lượng bằng `PUT {{baseUrl}}/api/cart/items/{{courseId}}`:
-
-```json
-{"quantity": 2}
-```
-
-`GET {{baseUrl}}/api/cart` để kiểm tra số lượng và tổng tiền. Gọi `GET {{baseUrl}}/api/courses/{{courseId}}/video` trước khi mua; kết quả là `403 Forbidden`.
-
-Tạo đơn chuyển khoản:
-
-```http
-POST {{baseUrl}}/api/orders
-```
-
-```json
-{"paymentMethod":"BANK_TRANSFER"}
-```
-
-Order có `paymentStatus=PENDING`; gọi lại video vẫn nhận `403`, vì đơn chuyển khoản chưa được xác nhận đã trả tiền.
-
-Thêm `paidCourseId` vào giỏ rồi checkout bằng phương thức mô phỏng:
-
-```json
-{"paymentMethod":"SIMULATED"}
-```
-
-Order có `paymentStatus=PAID`. Lưu id đơn vào `orderId`, sau đó gọi `GET {{baseUrl}}/api/courses/{{paidCourseId}}/video`. Response trả URL YouTube embed vì user đã có enrollment. Không có video file nào được upload vào database.
-
-Kiểm tra `GET {{baseUrl}}/api/orders` và `GET {{baseUrl}}/api/notifications`. Notification được lưu bất đồng bộ sau khi order được tạo.
-
-### 5. Chatbot trợ lý RAG
-
-Tạo tài liệu cho unit bằng `POST {{baseUrl}}/api/materials`:
-
-```json
-{
-  "courseId": {{courseId}},
-  "unitId": {{unitId}},
-  "title": "SOLID và Single Responsibility Principle",
-  "content": "Single Responsibility Principle nói rằng một lớp nên có một trách nhiệm chính và một lý do để thay đổi. Ví dụ, lớp xử lý đơn hàng không nên đồng thời gửi email và ghi báo cáo. Tách các trách nhiệm thành service riêng giúp giảm coupling, dễ kiểm thử bằng Mockito và mở rộng theo Open/Closed Principle."
-}
-```
-
-Response có `id` và trạng thái ban đầu. Lưu id vào `materialId`; gọi `GET {{baseUrl}}/api/materials/{{materialId}}` đến khi trạng thái là `READY`. RabbitMQ chuyển yêu cầu indexing tới worker, worker tách chunk và lưu embedding vào PostgreSQL pgvector.
-
-Gửi câu hỏi bằng `POST {{baseUrl}}/api/ai/ask`:
-
-```json
-{
-  "unitId": {{unitId}},
-  "question": "Vì sao Single Responsibility Principle giúp giảm coupling?"
-}
-```
-
-Response có câu trả lời từ Groq, model và danh sách `sources` được truy xuất. API key chỉ nằm trong biến môi trường local hoặc secret/parameter bảo mật của môi trường deploy; không đưa key lên màn hình demo.
-
-## Đường dẫn code để thuyết trình
-
-| Kiến thức | Nơi trình bày |
+| Kiến thức | File |
 |---|---|
-| Layered Architecture, Controller → Service → Repository, DTO/Mapper, Constructor DI | `learning-service/src/main/java/vn/edu/middlejava/learning/commerce/` |
-| SRP và checkout transaction | `commerce/service/impl/CommerceServiceImpl.java` |
-| Strategy và Factory Method cho thanh toán | `commerce/payment/BankTransferPaymentStrategy.java`, `SimulatedPaymentStrategy.java`, `PaymentStrategyFactory.java` |
-| Observer và xử lý notification sau commit | `commerce/event/OrderCreatedEvent.java`, `OrderNotificationObserver.java` |
-| JWT, Spring Security, CUSTOMER/ADMIN | `learning-service/src/main/java/vn/edu/middlejava/learning/auth/` |
-| JPA, giá khóa học, enrollment và index tìm kiếm | `course/entity/`, `course/repository/`, `learning-service/src/main/resources/db/migration/V2__course_store.sql`, `V4__course_enrollments.sql` |
-| JUnit/Mockito unit test | `learning-service/src/test/java/vn/edu/middlejava/learning/commerce/service/CommerceServiceImplTest.java` |
-| Integration test với PostgreSQL và RabbitMQ | `learning-service/src/test/java/vn/edu/middlejava/learning/commerce/PostgresCommerceIntegrationTest.java` |
-| API integration test | `learning-service/src/test/java/vn/edu/middlejava/learning/LearningServiceContextTest.java` |
-| Ingestion, chunking, vector search và chatbot | `ai-service/src/main/java/vn/edu/middlejava/ai/ingestion/`, `chat/`, `provider/` |
+| Spring Security + JWT, ADMIN/CUSTOMER | `auth/config/SecurityConfiguration.java`, `auth/service/impl/AuthServiceImpl.java` |
+| JPA/Hibernate, index tìm kiếm | `course/repository/ICourseRepository.java`, `db/migration/V2__course_store.sql` |
+| SRP | `commerce/service/impl/CartServiceImpl.java`, `OrderServiceImpl.java`, `AdminOrderServiceImpl.java`, `CatalogAdminServiceImpl.java` |
+| Extract Method / Extract Class | `CartServiceImpl` (private helpers), `commerce/pricing/CartPricingCalculator.java`, `commerce/mapper/CommerceMapper.java` |
+| `@Transactional`, Stream, Optional | `OrderServiceImpl.checkout`, `CartPricingCalculator`, `PaymentStrategyFactory.create` |
+| Strategy + Factory Method + OCP | `commerce/payment/*` |
+| Observer + CompletableFuture + ExecutorService | `commerce/event/*`, `config/NotificationExecutorConfiguration.java` |
+| Unit test (JUnit 5 + Mockito) | `src/test/.../commerce/service/CartServiceImplTest.java`, `OrderServiceImplTest.java`, `AdminOrderServiceImplTest.java`, `payment/PaymentStrategyFactoryTest.java`, `event/OrderEventPublisherTest.java` |
+| Integration test luồng đặt hàng | `src/test/.../commerce/PostgresCommerceIntegrationTest.java` (Testcontainers), `LearningServiceContextTest.java` (MockMvc) |
+| Migration mới | `db/migration/V5__payments_catalog_status.sql` |
 
-Chạy lại toàn bộ test bằng `mvn -B clean verify`. Testcontainers cần Docker đang chạy. Lần kiểm tra hoàn tất gần nhất có 21 test, 0 failures, 0 skipped.
+(các đường dẫn tính từ `learning-service/src/main/java/vn/edu/middlejava/learning/` hoặc `learning-service/src/test/java/vn/edu/middlejava/learning/`)
 
-## Script thuyết trình video
+## Phụ lục — Chatbot trợ lý RAG (ngoài phạm vi đề bài)
 
-### Mở đầu — 30 giây
-
-“Em xin chào các anh. Hôm nay em trình bày Middle Java Course Store, một hệ thống bán các khóa học Java qua video quay sẵn. Em giữ lại chatbot trợ lý từ hệ thống AI Study Coach cũ và chuyển nghiệp vụ trung tâm sang đăng ký, catalog, giỏ hàng, đặt hàng và thanh toán. Vì đề bài không yêu cầu giao diện, em sẽ thao tác trực tiếp các API bằng Postman.”
-
-### Kiến trúc và catalog — 1 phút
-
-“Luồng request đi từ Postman vào API Gateway. Gateway định tuyến sang learning-service hoặc ai-service; Eureka phục vụ discovery. PostgreSQL lưu user, khóa học, giỏ, order và enrollment. RabbitMQ xử lý indexing tài liệu cho RAG. Em gọi health rồi lấy catalog và tìm kiếm theo title. Response công khai chỉ có thông tin và giá; đường dẫn video được trả khi tài khoản đã có quyền học.”
-
-### Authentication và quản trị — 1 phút
-
-“Em đăng ký một CUSTOMER và nhận JWT. Token mang thông tin user/role; Spring Security kiểm tra token và phân quyền. Khi CUSTOMER gọi endpoint quản trị, API trả 403. Em đăng nhập ADMIN rồi cập nhật catalog. Controller chỉ nhận request/response; nghiệp vụ ở service và truy cập dữ liệu ở repository, mỗi lớp có một trách nhiệm.”
-
-### Cart và checkout — 2 phút
-
-“Em thêm khóa học vào cart, cập nhật số lượng rồi xem tổng tiền. Trước thanh toán, endpoint video trả 403. Em checkout BANK_TRANSFER; đơn có trạng thái PENDING nên quyền học chưa được cấp. Tiếp theo em checkout SIMULATED; đơn có trạng thái PAID, cart được xóa và enrollment được tạo trong cùng transaction. Sau đó endpoint video trả URL YouTube embed. Database chỉ lưu metadata và đường dẫn video.”
-
-“Hai cách thanh toán dùng Strategy để tách hành vi. PaymentStrategyFactory chọn strategy theo paymentMethod, nên có thể thêm phương thức mới mà không viết lại flow checkout — đây là cách em áp dụng OCP. Checkout dùng transaction để order, cart và enrollment nhất quán; dữ liệu order lưu snapshot tên/giá tại thời điểm mua.”
-
-### Notification và RAG — 1 phút 30 giây
-
-“Sau khi order được tạo, event được phát và Observer lưu notification bất đồng bộ. Em kiểm tra thông báo qua API. Tiếp theo em đưa tài liệu unit vào hệ thống. RabbitMQ chuyển tài liệu tới worker, worker chia chunk, tạo embedding và lưu vào pgvector. Khi em hỏi chatbot, hệ thống truy xuất đoạn liên quan rồi gửi context cho Groq; response trả lời kèm nguồn để kiểm tra căn cứ.”
-
-### Kiểm thử và nguyên tắc — 1 phút
-
-“Em dùng JUnit và Mockito để kiểm tra service cart/checkout độc lập dependency. Integration test chạy PostgreSQL và RabbitMQ thật bằng Testcontainers; API integration test kiểm tra JWT, role, cart, checkout, enrollment và quyền xem video. SOLID được thể hiện qua service tách trách nhiệm, phụ thuộc interface và constructor injection; Optional/Stream được dùng trong xử lý nghiệp vụ.”
-
-### Kết thúc — 20 giây
-
-“Tóm lại, project chuyển hệ thống học tập AI thành một course store có authentication, catalog, cart, order, hai phương thức thanh toán, notification và chatbot RAG. Em đã kiểm tra toàn bộ test suite và chạy luồng nghiệp vụ qua API. Em xin kết thúc phần trình bày, cảm ơn các anh.”
-
-## Lưu ý khi quay
-
-- Không quay lộ `GROQ_API_KEY`, JWT hoặc màn hình GitHub/AWS có thông tin bí mật.
-- Dùng email CUSTOMER mới cho mỗi lần chạy demo; Postman lưu token trong environment hiện tại.
-- Các khoản thanh toán là mô phỏng: `BANK_TRANSFER` tạo đơn chờ xác nhận, `SIMULATED` đánh dấu trả tiền thành công.
-- Nếu video YouTube chặn nhúng, thay link course bằng video công khai cho phép embed qua endpoint quản trị.
-- Hệ thống không kèm frontend; video được chứng minh bằng response `youtubeEmbedUrl` sau khi mua.
+`POST /api/materials` tạo tài liệu cho một unit (`courseId`, `unitId`, `title`, `content`). RabbitMQ chuyển yêu cầu indexing cho worker; worker tách chunk và lưu embedding vào pgvector. Gọi `GET /api/materials/{id}` đến khi trạng thái là `READY`, rồi `POST /api/ai/ask` với `unitId` và `question`. Response có câu trả lời và danh sách `sources`. API key Groq chỉ nằm trong biến môi trường hoặc Parameter Store, không đưa lên màn hình demo.

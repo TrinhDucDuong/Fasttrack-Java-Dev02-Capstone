@@ -37,11 +37,21 @@ class Demo:
             headers["Authorization"] = "Bearer " + token
         request = urllib.request.Request(url, data=data, method=method, headers=headers)
         started = time.time()
-        try:
-            with urllib.request.urlopen(request, timeout=30) as response:
-                status, raw = response.status, response.read().decode()
-        except urllib.error.HTTPError as error:
-            status, raw = error.code, error.read().decode()
+        for attempt in range(15):
+            try:
+                with urllib.request.urlopen(request, timeout=30) as response:
+                    status, raw = response.status, response.read().decode()
+                break
+            except urllib.error.HTTPError as error:
+                status, raw = error.code, error.read().decode()
+                break
+            except (urllib.error.URLError, ConnectionError) as error:
+                # connection reset during the TLS handshake: the request never reached the server
+                if attempt == 14:
+                    raise
+                print(f"     network error ({error}), retrying...")
+                time.sleep(1.5)
+                started = time.time()
         elapsed_ms = int((time.time() - started) * 1000)
         try:
             payload = json.loads(raw) if raw else None
@@ -60,6 +70,20 @@ class Demo:
         return payload
 
 
+def admin_course(d, admin_token, stamp):
+    new_course = d.call("3.1", "ADMIN tạo sản phẩm mới", "POST", "/api/admin/courses", {
+        "slug": f"design-patterns-{stamp}", "title": "Java Design Patterns",
+        "description": "Strategy, Factory Method, Observer in real projects.", "price": 24.99,
+        "youtubeUrl": "https://www.youtube.com/watch?v=v9ejT8FO-7I"}, token=admin_token, expect=201)
+    new_id = new_course["id"]
+    d.call("3.2", "ADMIN cập nhật giá", "PUT", f"/api/admin/courses/{new_id}", {
+        "slug": f"design-patterns-{stamp}", "title": "Java Design Patterns",
+        "description": "Strategy, Factory Method, Observer in real projects.", "price": 19.99,
+        "youtubeUrl": "https://www.youtube.com/watch?v=v9ejT8FO-7I"}, token=admin_token, expect=200)
+
+    return new_id
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--env", choices=["local", "cloud"], default="local")
@@ -68,8 +92,9 @@ def main():
 
     admin_email = os.environ.get("ADMIN_EMAIL") or (LOCAL_ADMIN[0] if args.env == "local" else None)
     admin_password = os.environ.get("ADMIN_PASSWORD") or (LOCAL_ADMIN[1] if args.env == "local" else None)
-    if not admin_email or not admin_password:
-        sys.exit("Set ADMIN_EMAIL and ADMIN_PASSWORD for the cloud admin account")
+    with_admin = bool(admin_email and admin_password)
+    if not with_admin:
+        print("ADMIN_EMAIL/ADMIN_PASSWORD not set: running the CUSTOMER part only")
 
     d = Demo(args.base_url)
     stamp = time.strftime("%m%d%H%M%S")
@@ -87,27 +112,23 @@ def main():
     token = d.call("2.2", "Đăng nhập CUSTOMER - nhận JWT", "POST", "/api/auth/login", customer, expect=200)["accessToken"]
     d.vars["customerToken"] = token
     d.call("2.3", "CUSTOMER gọi API ADMIN -> 403", "POST", "/api/admin/courses", {}, token=token, expect=403)
-    admin = d.call("2.4", "Đăng nhập ADMIN", "POST", "/api/auth/login",
-                   {"email": admin_email, "password": admin_password}, expect=200)
-    d.vars["adminToken"] = admin_token = admin["accessToken"]
-    # never keep the admin password in the saved output
-    d.steps[-1]["requestBody"] = {"email": admin_email, "password": "••••••••"}
+    admin_token = None
+    if with_admin:
+        admin = d.call("2.4", "Đăng nhập ADMIN", "POST", "/api/auth/login",
+                       {"email": admin_email, "password": admin_password}, expect=200)
+        d.vars["adminToken"] = admin_token = admin["accessToken"]
+        # never keep the admin password in the saved output
+        d.steps[-1]["requestBody"] = {"email": admin_email, "password": "••••••••"}
 
     # 3. Product management (ADMIN)
-    new_course = d.call("3.1", "ADMIN tạo sản phẩm mới", "POST", "/api/admin/courses", {
-        "slug": f"design-patterns-{stamp}", "title": "Java Design Patterns",
-        "description": "Strategy, Factory Method, Observer in real projects.", "price": 24.99,
-        "youtubeUrl": "https://www.youtube.com/watch?v=v9ejT8FO-7I"}, token=admin_token, expect=201)
-    new_id = new_course["id"]
-    d.call("3.2", "ADMIN cập nhật giá", "PUT", f"/api/admin/courses/{new_id}", {
-        "slug": f"design-patterns-{stamp}", "title": "Java Design Patterns",
-        "description": "Strategy, Factory Method, Observer in real projects.", "price": 19.99,
-        "youtubeUrl": "https://www.youtube.com/watch?v=v9ejT8FO-7I"}, token=admin_token, expect=200)
+    new_id = by_slug["spring-boot-microservices"]
+    if with_admin:
+        new_id = admin_course(d, admin_token, stamp)
 
     # 4. Cart
     d.call("4.1", "Thêm Middle Java vào giỏ", "POST", "/api/cart/items",
            {"courseId": middle_java, "quantity": 1}, token=token, expect=200)
-    d.call("4.2", "Thêm khóa mới vào giỏ", "POST", "/api/cart/items",
+    d.call("4.2", "Thêm khóa thứ hai vào giỏ", "POST", "/api/cart/items",
            {"courseId": new_id, "quantity": 1}, token=token, expect=200)
     d.call("4.3", "Cập nhật số lượng = 2", "PUT", f"/api/cart/items/{middle_java}",
            {"quantity": 2}, token=token, expect=200)
@@ -128,20 +149,22 @@ def main():
            {"courseId": fundamentals, "quantity": 1}, token=token, expect=200)
     cod = d.call("6.2", "Đặt hàng COD", "POST", "/api/orders", {"paymentMethod": "COD"}, token=token, expect=201)
     d.call("6.3", "COD chưa trả tiền -> video 403", "GET", f"/api/courses/{fundamentals}/video", token=token, expect=403)
-    d.call("6.4", "ADMIN xem tất cả đơn", "GET", "/api/admin/orders", token=admin_token, expect=200)
-    d.call("6.5", "ADMIN xác nhận thanh toán COD", "PUT", f"/api/admin/orders/{cod['id']}/confirm-payment",
-           token=admin_token, expect=200)
-    d.call("6.6", "Xác nhận lần 2 -> 409", "PUT", f"/api/admin/orders/{cod['id']}/confirm-payment",
-           token=admin_token, expect=409)
-    d.call("6.7", "Đã xác nhận -> video 200", "GET", f"/api/courses/{fundamentals}/video", token=token, expect=200)
+    if with_admin:
+        d.call("6.4", "ADMIN xem tất cả đơn", "GET", "/api/admin/orders", token=admin_token, expect=200)
+        d.call("6.5", "ADMIN xác nhận thanh toán COD", "PUT", f"/api/admin/orders/{cod['id']}/confirm-payment",
+               token=admin_token, expect=200)
+        d.call("6.6", "Xác nhận lần 2 -> 409", "PUT", f"/api/admin/orders/{cod['id']}/confirm-payment",
+               token=admin_token, expect=409)
+        d.call("6.7", "Đã xác nhận -> video 200", "GET", f"/api/courses/{fundamentals}/video", token=token, expect=200)
     time.sleep(1.5)
     d.call("6.8", "Thông báo đổi trạng thái", "GET", "/api/notifications", token=token, expect=200)
     d.call("6.9", "Lịch sử đơn hàng", "GET", "/api/orders", token=token, expect=200)
 
     # 7. Edge cases + soft delete
     d.call("7.1", "Giỏ trống -> 400", "POST", "/api/orders", {"paymentMethod": "VNPAY"}, token=token, expect=400)
-    d.call("7.2", "ADMIN ngừng bán sản phẩm", "DELETE", f"/api/admin/courses/{new_id}", token=admin_token, expect=204)
-    d.call("7.3", "Catalog không còn sản phẩm đã ngừng bán", "GET", "/api/courses", expect=200)
+    if with_admin:
+        d.call("7.2", "ADMIN ngừng bán sản phẩm", "DELETE", f"/api/admin/courses/{new_id}", token=admin_token, expect=204)
+        d.call("7.3", "Catalog không còn sản phẩm đã ngừng bán", "GET", "/api/courses", expect=200)
 
     out = Path(__file__).parent / "output" / args.env
     out.mkdir(parents=True, exist_ok=True)

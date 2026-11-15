@@ -21,31 +21,31 @@ Hệ thống bán khóa học Java quay sẵn (sản phẩm = khóa học, video
 | Unit test giỏ hàng (JUnit 5 + Mockito) | `CartServiceImplTest` (11 test) | `@ExtendWith(MockitoExtension)`, `@Mock ShoppingCartRepository / ICourseRepository`, `verify(..., never())`. |
 | Đặt hàng: giỏ → đơn | `OrderServiceImpl.checkout` | Snapshot giá và tên tại thời điểm mua vào `customer_order_items`, sau đó làm trống giỏ. |
 | `@Transactional` | `OrderServiceImpl.checkout`, `AdminOrderServiceImpl.confirmPayment`, `@Transactional(readOnly = true)` cho truy vấn | Lưu đơn + mở quyền học + xóa giỏ trong 1 transaction. Test `transactionalCheckoutRollsBackEverythingWhenAStepFails` cho một bước ném lỗi rồi kiểm tra: không có đơn mới, giỏ còn nguyên, không phát thông báo. |
-| Stream API / Optional | `CartPricingCalculator` (`stream().map().reduce`, `Collectors.toMap`), `OrderServiceImpl` (`findByUserId().filter().orElseThrow()`), `PaymentStrategyFactory.create` (`Optional.ofNullable().map().orElseThrow()`), `CourseServiceImpl.searchCourses` | Không dùng vòng for hay `if (x != null)` thủ công. |
+| Stream API / Optional | `CartPricingCalculator` (`stream().map().reduce`, `Collectors.toMap`), `OrderServiceImpl` (`findByUserId().filter().orElseThrow()`), `PaymentProcessorRegistry.processorFor` (`Optional.ofNullable().map().orElseThrow()`), `CourseServiceImpl.searchCourses` | Không dùng vòng for hay `if (x != null)` thủ công. |
 | ≥ 2 phương thức thanh toán | `VnPayPaymentStrategy` (giả lập, PAID + mã giao dịch `VNP…`), `CodPaymentStrategy` (PENDING), `BankTransferPaymentStrategy` (PENDING + mã chuyển khoản `BT-…`) | Đơn PENDING được ADMIN xác nhận qua `PUT /api/admin/orders/{id}/confirm-payment`. |
 | Thông báo trạng thái đơn hàng | `OrderEventPublisher`, `InAppNotificationObserver`, `EmailNotificationObserver` | Gửi khi tạo đơn và khi ADMIN xác nhận thanh toán. Khách đọc qua `GET /api/notifications`; email được ghi log giả lập. |
 | CompletableFuture / ExecutorService | `OrderEventPublisher.notifyObservers` + `config/NotificationExecutorConfiguration` | Mỗi observer chạy bằng `CompletableFuture.runAsync(..., executor)` trên pool riêng `order-notify-*`. `exceptionally` cô lập lỗi; `allOf` gom kết quả. Listener chạy `AFTER_COMMIT` nên chỉ thông báo khi dữ liệu đã chắc chắn được lưu. |
-| Unit test Service + Mockito | `CartServiceImplTest`, `OrderServiceImplTest`, `AdminOrderServiceImplTest`, `CourseServiceImplTest`, `PaymentStrategyFactoryTest`, `CartPricingCalculatorTest`, `OrderEventPublisherTest` | Mock repository, `ApplicationEventPublisher`, `ICourseEnrollmentService`; `ArgumentCaptor` kiểm tra event được publish. |
+| Unit test Service + Mockito | `CartServiceImplTest`, `OrderServiceImplTest`, `AdminOrderServiceImplTest`, `CourseServiceImplTest`, `PaymentFactoryMethodTest`, `CartPricingCalculatorTest`, `OrderEventPublisherTest` | Mock repository, `ApplicationEventPublisher`, `ICourseEnrollmentService`; `ArgumentCaptor` kiểm tra event được publish. |
 | Integration test luồng đặt hàng | `PostgresCommerceIntegrationTest` (Testcontainers: PostgreSQL + RabbitMQ thật), `LearningServiceContextTest` (MockMvc, gọi HTTP đầy đủ với JWT) | Kiểm tra: Flyway V1–V5, index, checkout VNPay, COD + ADMIN xác nhận, rollback, thông báo bất đồng bộ, phân quyền 403/404/409. |
 
-Tổng cộng 41 test ở `learning-service`, chạy tự động trong GitHub Actions trước mỗi lần deploy.
+Tổng cộng 42 test ở `learning-service`, chạy tự động trong GitHub Actions trước mỗi lần deploy.
 
 ## 2. SOLID
 
 | Nguyên lý | Ví dụ trong code |
 |---|---|
 | **S** – Single Responsibility | `CartServiceImpl` chỉ quản lý giỏ hàng; `OrderServiceImpl` chỉ checkout và đọc đơn; `AdminOrderServiceImpl` chỉ xử lý nghiệp vụ back-office; `CartPricingCalculator` chỉ tính tiền; `CommerceMapper` chỉ map DTO; mỗi observer lo một kênh thông báo. |
-| **O** – Open/Closed | Thêm phương thức thanh toán (ví dụ MoMo) chỉ cần một class `@Component implements PaymentStrategy`, không sửa `PaymentStrategyFactory` hay `OrderServiceImpl`. Test `openClosedPrincipleNewMethodNeedsNoFactoryChange` chứng minh điều này. Thêm kênh thông báo (SMS) cũng chỉ cần một `OrderStatusObserver` mới. |
-| **L** – Liskov Substitution | Mọi `PaymentStrategy` và `OrderStatusObserver` thay thế nhau được: checkout và publisher chỉ dựa vào hợp đồng của interface. |
+| **O** – Open/Closed | Thêm phương thức thanh toán (ví dụ MoMo) chỉ cần thêm một `PaymentStrategy` và một `PaymentProcessor` con; không sửa `PaymentProcessorRegistry`, `OrderServiceImpl` hay các processor có sẵn. Test `openClosedPrincipleNewMethodIsOneNewCreatorAndNoChangeElsewhere` chứng minh điều này. Thêm kênh thông báo (SMS) cũng chỉ cần một `OrderStatusObserver` mới. |
+| **L** – Liskov Substitution | Mọi `PaymentProcessor`, `PaymentStrategy` và `OrderStatusObserver` thay thế nhau được: checkout và publisher chỉ dựa vào hợp đồng của interface. |
 | **I** – Interface Segregation | Interface nhỏ và tách theo vai trò: `ICartService`, `IOrderService`, `IAdminOrderService`, `ICatalogAdminService`; controller cũng tách interface (`ICartController`, `IOrderController`, …). |
-| **D** – Dependency Inversion | Service phụ thuộc vào abstraction (`PaymentStrategy`, `OrderStatusObserver`, repository interface, `ApplicationEventPublisher`), được Spring inject qua constructor. Nhờ vậy unit test thay bằng mock dễ dàng. |
+| **D** – Dependency Inversion | Service phụ thuộc vào abstraction (`PaymentProcessor`, `PaymentStrategy`, `OrderStatusObserver`, repository interface, `ApplicationEventPublisher`), được Spring inject qua constructor. Nhờ vậy unit test thay bằng mock dễ dàng. |
 
 ## 3. Design Pattern và lý do chọn
 
 | Pattern | Class | Vì sao chọn |
 |---|---|---|
 | **Strategy** | `PaymentStrategy` + `VnPayPaymentStrategy`, `CodPaymentStrategy`, `BankTransferPaymentStrategy` | Mỗi phương thức thanh toán có quy tắc riêng (trả ngay hay chờ, mã tham chiếu). Strategy gom từng thuật toán vào một class, nên checkout không còn chuỗi `if/switch` theo loại thanh toán. |
-| **Factory Method** | `PaymentStrategyFactory.create(method)` | Một điểm duy nhất quyết định tạo hoặc chọn strategy theo dữ liệu từ client, trả về kiểu interface. Client không `new` class cụ thể. Factory tự nhận các strategy qua Spring nên đóng với sửa đổi, mở để mở rộng (OCP). |
+| **Factory Method** (GoF) | Creator trừu tượng `PaymentProcessor` với factory method `createStrategy()`; ConcreteCreator `VnPayPaymentProcessor`, `CodPaymentProcessor`, `BankTransferPaymentProcessor`; Product là `PaymentStrategy` | `PaymentProcessor.process()` chứa quy trình thanh toán chung (kiểm tra số tiền → tạo strategy → `pay`) nhưng không biết strategy cụ thể; mỗi lớp con override `createStrategy()` để quyết định. `OrderServiceImpl` chỉ làm việc với `PaymentProcessor`, không `new` class cụ thể. `PaymentProcessorRegistry` nhận mọi processor qua Spring rồi chọn theo mã phương thức khách gửi lên, nên thêm phương thức mới không phải sửa code cũ (OCP). |
 | **Observer** | Subject `OrderEventPublisher`; Observer `OrderStatusObserver` → `InAppNotificationObserver`, `EmailNotificationObserver`; Event `OrderStatusChangedEvent` | Đơn hàng không cần biết có bao nhiêu kênh thông báo. Thêm hoặc bớt kênh không ảnh hưởng nghiệp vụ đặt hàng. Kết hợp `CompletableFuture` + `ExecutorService` để thông báo không làm chậm request. |
 | Repository / DTO / Mapper | Spring Data repository, record DTO, `CommerceMapper`, `CourseMapper` | Tách tầng dữ liệu và tầng API; entity không lộ ra ngoài. |
 

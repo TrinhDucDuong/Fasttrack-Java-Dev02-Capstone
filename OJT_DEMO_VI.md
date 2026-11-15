@@ -57,9 +57,9 @@ Import `demo/postman/MiddleJavaStore.postman_collection.json` và `demo/postman/
 | 2.4 | Đăng nhập ADMIN | `adminToken` | |
 | 3.1–3.3 | ADMIN tạo, sửa giá, xem danh sách sản phẩm | 201 / 200, admin thấy `youtubeUrl`, `active` | SRP: `CatalogAdminServiceImpl` |
 | 4.1–4.5 | Thêm 2 khóa, sửa số lượng = 2, xóa 1 khóa, xem giỏ | `total` được tính lại, xóa trả 204 | Extract Method / Extract Class |
-| 5.1 | `GET /api/orders/payment-methods` | `BANK_TRANSFER, COD, VNPAY` | Factory tự nhận strategy (OCP) |
+| 5.1 | `GET /api/orders/payment-methods` | `BANK_TRANSFER, COD, VNPAY` | Registry tự nhận mọi `PaymentProcessor` (OCP) |
 | 5.2 | Xem video trước khi mua | **403** | |
-| 5.3 | `POST /api/orders` `{"paymentMethod":"VNPAY"}` | `PAID`, `paymentReference: VNP…`, `CONFIRMED` | `@Transactional`, Strategy + Factory Method |
+| 5.3 | `POST /api/orders` `{"paymentMethod":"VNPAY"}` | `PAID`, `paymentReference: VNP…`, `CONFIRMED` | `@Transactional`, Factory Method (`PaymentProcessor.createStrategy`) + Strategy |
 | 5.4–5.5 | Giỏ đã trống, video trả `youtubeEmbedUrl` | | |
 | 5.6 | `GET /api/notifications` | Thông báo "Order #… has been created" | Observer + CompletableFuture |
 | 6.1–6.3 | Thêm Java Fundamentals, đặt hàng COD, xem video | `PENDING / AWAITING_PAYMENT`, video **403** | Strategy khác, cùng hợp đồng |
@@ -104,10 +104,10 @@ python demo/run_demo.py --env cloud --base-url https://d3jaw9bd80q6ki.cloudfront
 | JPA/Hibernate, index tìm kiếm | `course/repository/ICourseRepository.java`, `db/migration/V2__course_store.sql` |
 | SRP | `commerce/service/impl/CartServiceImpl.java`, `OrderServiceImpl.java`, `AdminOrderServiceImpl.java`, `CatalogAdminServiceImpl.java` |
 | Extract Method / Extract Class | `CartServiceImpl` (private helpers), `commerce/pricing/CartPricingCalculator.java`, `commerce/mapper/CommerceMapper.java` |
-| `@Transactional`, Stream, Optional | `OrderServiceImpl.checkout`, `CartPricingCalculator`, `PaymentStrategyFactory.create` |
-| Strategy + Factory Method + OCP | `commerce/payment/*` |
+| `@Transactional`, Stream, Optional | `OrderServiceImpl.checkout`, `CartPricingCalculator`, `PaymentProcessorRegistry.processorFor` |
+| Factory Method + Strategy + OCP | `commerce/payment/PaymentProcessor.java` (Creator), `*PaymentProcessor.java` (ConcreteCreator), `*PaymentStrategy.java` (Product/Strategy), `PaymentProcessorRegistry.java` |
 | Observer + CompletableFuture + ExecutorService | `commerce/event/*`, `config/NotificationExecutorConfiguration.java` |
-| Unit test (JUnit 5 + Mockito) | `src/test/.../commerce/service/CartServiceImplTest.java`, `OrderServiceImplTest.java`, `AdminOrderServiceImplTest.java`, `payment/PaymentStrategyFactoryTest.java`, `event/OrderEventPublisherTest.java` |
+| Unit test (JUnit 5 + Mockito) | `src/test/.../commerce/service/CartServiceImplTest.java`, `OrderServiceImplTest.java`, `AdminOrderServiceImplTest.java`, `payment/PaymentFactoryMethodTest.java`, `event/OrderEventPublisherTest.java` |
 | Integration test luồng đặt hàng | `src/test/.../commerce/PostgresCommerceIntegrationTest.java` (Testcontainers), `LearningServiceContextTest.java` (MockMvc) |
 | Migration mới | `db/migration/V5__payments_catalog_status.sql` |
 

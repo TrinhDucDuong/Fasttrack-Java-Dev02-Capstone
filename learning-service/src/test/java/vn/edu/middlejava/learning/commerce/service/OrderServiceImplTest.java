@@ -15,10 +15,10 @@ import vn.edu.middlejava.learning.commerce.dto.OrderResponse;
 import vn.edu.middlejava.learning.commerce.entity.ShoppingCart;
 import vn.edu.middlejava.learning.commerce.event.OrderStatusChangedEvent;
 import vn.edu.middlejava.learning.commerce.mapper.CommerceMapper;
-import vn.edu.middlejava.learning.commerce.payment.BankTransferPaymentStrategy;
-import vn.edu.middlejava.learning.commerce.payment.CodPaymentStrategy;
-import vn.edu.middlejava.learning.commerce.payment.PaymentStrategyFactory;
-import vn.edu.middlejava.learning.commerce.payment.VnPayPaymentStrategy;
+import vn.edu.middlejava.learning.commerce.payment.BankTransferPaymentProcessor;
+import vn.edu.middlejava.learning.commerce.payment.CodPaymentProcessor;
+import vn.edu.middlejava.learning.commerce.payment.PaymentProcessorRegistry;
+import vn.edu.middlejava.learning.commerce.payment.VnPayPaymentProcessor;
 import vn.edu.middlejava.learning.commerce.pricing.CartPricingCalculator;
 import vn.edu.middlejava.learning.commerce.repository.CustomerOrderRepository;
 import vn.edu.middlejava.learning.commerce.repository.ShoppingCartRepository;
@@ -61,8 +61,8 @@ class OrderServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        PaymentStrategyFactory payments = new PaymentStrategyFactory(List.of(
-                new CodPaymentStrategy(), new VnPayPaymentStrategy(), new BankTransferPaymentStrategy()));
+        PaymentProcessorRegistry payments = new PaymentProcessorRegistry(List.of(
+                new CodPaymentProcessor(), new VnPayPaymentProcessor(), new BankTransferPaymentProcessor()));
         service = new OrderServiceImpl(carts, orders, new CartPricingCalculator(courses), payments,
                 enrollments, events, new CommerceMapper());
 

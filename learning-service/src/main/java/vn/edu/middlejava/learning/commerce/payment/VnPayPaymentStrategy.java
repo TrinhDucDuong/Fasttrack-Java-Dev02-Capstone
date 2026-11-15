@@ -1,22 +1,14 @@
 package vn.edu.middlejava.learning.commerce.payment;
 
-import org.springframework.stereotype.Component;
-
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.ThreadLocalRandom;
 
 /** Simulated VNPay gateway: approves the payment and returns a gateway transaction number. */
-@Component
 public class VnPayPaymentStrategy implements PaymentStrategy {
     private static final DateTimeFormatter TIMESTAMP = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
     private static final ZoneId VIETNAM = ZoneId.of("Asia/Ho_Chi_Minh");
-
-    @Override
-    public String method() {
-        return "VNPAY";
-    }
 
     @Override
     public PaymentResult pay(PaymentRequest request) {

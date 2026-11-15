@@ -9,10 +9,10 @@ import vn.edu.middlejava.learning.commerce.entity.CustomerOrder;
 import vn.edu.middlejava.learning.commerce.entity.ShoppingCart;
 import vn.edu.middlejava.learning.commerce.event.OrderStatusChangedEvent;
 import vn.edu.middlejava.learning.commerce.mapper.CommerceMapper;
+import vn.edu.middlejava.learning.commerce.payment.PaymentProcessor;
+import vn.edu.middlejava.learning.commerce.payment.PaymentProcessorRegistry;
 import vn.edu.middlejava.learning.commerce.payment.PaymentRequest;
 import vn.edu.middlejava.learning.commerce.payment.PaymentResult;
-import vn.edu.middlejava.learning.commerce.payment.PaymentStrategy;
-import vn.edu.middlejava.learning.commerce.payment.PaymentStrategyFactory;
 import vn.edu.middlejava.learning.commerce.pricing.CartPricingCalculator;
 import vn.edu.middlejava.learning.commerce.pricing.PricedCart;
 import vn.edu.middlejava.learning.commerce.repository.CustomerOrderRepository;
@@ -29,13 +29,13 @@ public class OrderServiceImpl implements IOrderService {
     private final ShoppingCartRepository carts;
     private final CustomerOrderRepository orders;
     private final CartPricingCalculator pricing;
-    private final PaymentStrategyFactory payments;
+    private final PaymentProcessorRegistry payments;
     private final ICourseEnrollmentService enrollments;
     private final ApplicationEventPublisher events;
     private final CommerceMapper mapper;
 
     public OrderServiceImpl(ShoppingCartRepository carts, CustomerOrderRepository orders,
-                            CartPricingCalculator pricing, PaymentStrategyFactory payments,
+                            CartPricingCalculator pricing, PaymentProcessorRegistry payments,
                             ICourseEnrollmentService enrollments, ApplicationEventPublisher events,
                             CommerceMapper mapper) {
         this.carts = carts;
@@ -57,10 +57,10 @@ public class OrderServiceImpl implements IOrderService {
         ShoppingCart cart = carts.findByUserId(userId)
                 .filter(existing -> !existing.isEmpty())
                 .orElseThrow(() -> new IllegalArgumentException("Cart is empty"));
-        PaymentStrategy payment = payments.create(request.paymentMethod());
+        PaymentProcessor payment = payments.processorFor(request.paymentMethod());
         PricedCart pricedCart = pricing.price(cart);
 
-        PaymentResult paymentResult = payment.pay(new PaymentRequest(userId, pricedCart.total()));
+        PaymentResult paymentResult = payment.process(new PaymentRequest(userId, pricedCart.total()));
         CustomerOrder order = orders.save(buildOrder(userId, pricedCart, payment.method(), paymentResult));
 
         if (order.isPaid()) {

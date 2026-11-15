@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import vn.edu.middlejava.learning.commerce.dto.CheckoutRequest;
 import vn.edu.middlejava.learning.commerce.dto.OrderResponse;
-import vn.edu.middlejava.learning.commerce.payment.PaymentStrategyFactory;
+import vn.edu.middlejava.learning.commerce.payment.PaymentProcessorRegistry;
 import vn.edu.middlejava.learning.commerce.service.IOrderService;
 
 import java.util.List;
@@ -21,9 +21,9 @@ import java.util.List;
 @RequestMapping("/api/orders")
 public class OrderControllerImpl implements IOrderController {
     private final IOrderService orderService;
-    private final PaymentStrategyFactory payments;
+    private final PaymentProcessorRegistry payments;
 
-    public OrderControllerImpl(IOrderService orderService, PaymentStrategyFactory payments) {
+    public OrderControllerImpl(IOrderService orderService, PaymentProcessorRegistry payments) {
         this.orderService = orderService;
         this.payments = payments;
     }
@@ -47,7 +47,7 @@ public class OrderControllerImpl implements IOrderController {
         return orderService.getOrder(userId(jwt), orderId);
     }
 
-    /** Lists every registered PaymentStrategy - grows automatically when a new one is added. */
+    /** Lists every registered PaymentProcessor - grows automatically when a new one is added. */
     @Override
     @GetMapping("/payment-methods")
     public List<String> getPaymentMethods() {

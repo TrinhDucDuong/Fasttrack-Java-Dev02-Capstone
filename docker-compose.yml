@@ -29,6 +29,16 @@ services:
       timeout: 5s
       retries: 20
 
+  video-storage:
+    # S3-compatible object storage for course videos (same S3 API the app uses with Amazon S3 on AWS).
+    image: chrislusf/seaweedfs:4.50
+    command: ["server", "-s3", "-s3.config=/etc/seaweedfs/s3.json", "-dir=/data"]
+    ports:
+      - "8333:8333"
+    volumes:
+      - ./deploy/local/seaweedfs-s3.json:/etc/seaweedfs/s3.json:ro
+      - study-coach-videos:/data
+
   prometheus:
     image: prom/prometheus:latest
     profiles: [observability]
@@ -39,3 +49,4 @@ services:
 
 volumes:
   study-coach-postgres:
+  study-coach-videos:

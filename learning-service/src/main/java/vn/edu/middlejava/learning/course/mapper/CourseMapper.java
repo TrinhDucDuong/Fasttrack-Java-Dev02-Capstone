@@ -22,11 +22,12 @@ public class CourseMapper {
 
     public CourseAdminResponse toAdminResponse(Course course) {
         return new CourseAdminResponse(course.getId(), course.getSlug(), course.getTitle(),
-                course.getDescription(), course.getPrice(), course.getYoutubeUrl(), course.isActive());
+                course.getDescription(), course.getPrice(), course.getYoutubeUrl(), course.isActive(),
+                course.getVideoKey(), course.getVideoSizeBytes(), course.getVideoUploadedAt());
     }
 
     public CourseVideoResponse toVideoResponse(Course course) {
-        return new CourseVideoResponse(course.getId(), course.getTitle(), toEmbedUrl(course.getYoutubeUrl()));
+        return CourseVideoResponse.youtube(course.getId(), course.getTitle(), toEmbedUrl(course.getYoutubeUrl()));
     }
 
     private String toEmbedUrl(String youtubeUrl) {

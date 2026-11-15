@@ -38,6 +38,14 @@ services:
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
       EUREKA_URL: http://discovery-server:8761/eureka/
       JWT_SECRET: ${JWT_SECRET}
+      # Course videos in Amazon S3; credentials come from the EC2 instance role (no keys in config)
+      AWS_REGION: ${AWS_REGION}
+      VIDEO_BUCKET: ${VIDEO_BUCKET}
+      VIDEO_STORAGE_ENDPOINT: ""
+      VIDEO_STORAGE_ACCESS_KEY: ""
+      VIDEO_STORAGE_SECRET_KEY: ""
+      VIDEO_STORAGE_PATH_STYLE: "false"
+      VIDEO_STORAGE_CREATE_BUCKET: "false"
     depends_on:
       rabbitmq:
         condition: service_healthy

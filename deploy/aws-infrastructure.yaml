@@ -207,6 +207,56 @@ Resources:
               Bool:
                 aws:SecureTransport: false
 
+  VideoBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${AWS::AccountId}-${AWS::Region}-studycoach-course-videos
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      CorsConfiguration:
+        CorsRules:
+          - Id: browser-upload-and-playback
+            AllowedOrigins:
+              - !Sub https://${CloudFrontDistribution.DomainName}
+            AllowedMethods: [GET, HEAD, PUT]
+            AllowedHeaders: ["*"]
+            ExposedHeaders: [ETag]
+            MaxAge: 3000
+      LifecycleConfiguration:
+        Rules:
+          - Id: abort-incomplete-uploads
+            Status: Enabled
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 1
+      Tags:
+        - Key: Project
+          Value: study-coach
+
+  VideoBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref VideoBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: "*"
+            Action: s3:*
+            Resource:
+              - !GetAtt VideoBucket.Arn
+              - !Sub ${VideoBucket.Arn}/*
+            Condition:
+              Bool:
+                aws:SecureTransport: false
+
   DiscoveryRepository:
     Type: AWS::ECR::Repository
     Properties:
@@ -463,6 +513,16 @@ Resources:
                 Effect: Allow
                 Action: s3:ListBucket
                 Resource: !GetAtt BackupBucket.Arn
+              - Sid: ReadWriteCourseVideos
+                Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                Resource: !Sub ${VideoBucket.Arn}/courses/*
+              - Sid: ListVideoBucket
+                Effect: Allow
+                Action: s3:ListBucket
+                Resource: !GetAtt VideoBucket.Arn
       Tags:
         - Key: Project
           Value: study-coach
@@ -486,6 +546,7 @@ Resources:
       MetadataOptions:
         HttpEndpoint: enabled
         HttpTokens: required
+        HttpPutResponseHopLimit: 2
       BlockDeviceMappings:
         - DeviceName: /dev/xvda
           Ebs:
@@ -552,6 +613,13 @@ Resources:
       Type: String
       Value: !Ref BackupBucket
 
+  VideoBucketParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /studycoach/prod/video-bucket
+      Type: String
+      Value: !Ref VideoBucket
+
 Outputs:
   PublicUrl:
     Description: Public HTTPS URL for the application
@@ -569,5 +637,7 @@ Outputs:
     Value: !GetAtt Database.Endpoint.Address
   BackupBucketName:
     Value: !Ref BackupBucket
+  VideoBucketName:
+    Value: !Ref VideoBucket
   EcrRegistry:
     Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com

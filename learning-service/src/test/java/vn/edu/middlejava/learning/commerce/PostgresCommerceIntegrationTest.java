@@ -45,7 +45,8 @@ import static org.mockito.Mockito.reset;
         "spring.jpa.hibernate.ddl-auto=validate",
         "spring.flyway.enabled=true",
         "app.admin.email=",
-        "app.admin.password="
+        "app.admin.password=",
+        "app.video-storage.create-bucket=false"
 })
 class PostgresCommerceIntegrationTest {
     @Container

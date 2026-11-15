@@ -69,6 +69,52 @@ class Demo:
             print("     expected", expect, "got", status, json.dumps(payload)[:300])
         return payload
 
+    def direct(self, step_id, title, method, url, data=None, headers=None, expect=None):
+        """Request straight to object storage (presigned URL) - it does not go through the API."""
+        request = urllib.request.Request(url, data=data, method=method, headers=headers or {})
+        started = time.time()
+        for attempt in range(15):
+            try:
+                with urllib.request.urlopen(request, timeout=60) as response:
+                    status, body, content_type = response.status, response.read(), response.headers.get("Content-Type")
+                break
+            except urllib.error.HTTPError as error:
+                status, body, content_type = error.code, error.read(), error.headers.get("Content-Type")
+                break
+            except (urllib.error.URLError, ConnectionError) as error:
+                if attempt == 14:
+                    raise
+                print(f"     network error ({error}), retrying...")
+                time.sleep(1.5)
+                started = time.time()
+        elapsed_ms = int((time.time() - started) * 1000)
+        ok = expect is None or status == expect
+        response_info = {"contentType": content_type, "bytes": len(body)}
+        if status >= 400:
+            response_info["body"] = body.decode(errors="replace")[:300]
+        self.steps.append({
+            "id": step_id, "title": title, "method": method, "path": url.split("?")[0], "url": url, "auth": "presigned",
+            "requestBody": {"file": f"{len(data)} bytes"} if data else None, "status": status,
+            "elapsedMs": elapsed_ms, "response": response_info, "ok": ok,
+        })
+        marker = "OK " if ok else "!! "
+        print(f"{marker}{step_id:>4} {method:6} {'(storage) ' + url.split('?')[0][-35:]:45} -> {status} ({elapsed_ms} ms)")
+        if not ok:
+            print("     expected", expect, "got", status, response_info)
+        return status
+
+
+def upload_course_video(d, admin_token, course_id):
+    video = (Path(__file__).parent / "assets" / "middle-java-bai-1.mp4").read_bytes()
+    ticket = d.call("3.3", "ADMIN xin URL upload video (presigned)", "POST",
+                    f"/api/admin/courses/{course_id}/video/upload-url",
+                    {"fileName": "middle-java-bai-1.mp4", "contentType": "video/mp4", "sizeBytes": len(video)},
+                    token=admin_token, expect=200)
+    d.direct("3.4", "Upload file thẳng lên object storage", ticket["method"], ticket["uploadUrl"],
+             data=video, headers=ticket["headers"], expect=200)
+    d.call("3.5", "ADMIN xác nhận video cho khóa học", "PUT", f"/api/admin/courses/{course_id}/video",
+           {"key": ticket["key"]}, token=admin_token, expect=200)
+
 
 def admin_course(d, admin_token, stamp):
     new_course = d.call("3.1", "ADMIN tạo sản phẩm mới", "POST", "/api/admin/courses", {
@@ -124,6 +170,7 @@ def main():
     new_id = by_slug["spring-boot-microservices"]
     if with_admin:
         new_id = admin_course(d, admin_token, stamp)
+        upload_course_video(d, admin_token, middle_java)
 
     # 4. Cart
     d.call("4.1", "Thêm Middle Java vào giỏ", "POST", "/api/cart/items",
@@ -140,7 +187,11 @@ def main():
     d.call("5.2", "Chưa mua -> video 403", "GET", f"/api/courses/{middle_java}/video", token=token, expect=403)
     paid = d.call("5.3", "Đặt hàng VNPAY (giả lập)", "POST", "/api/orders", {"paymentMethod": "VNPAY"}, token=token, expect=201)
     d.call("5.4", "Giỏ hàng đã được làm trống", "GET", "/api/cart", token=token, expect=200)
-    d.call("5.5", "Đã mua -> video 200", "GET", f"/api/courses/{middle_java}/video", token=token, expect=200)
+    video = d.call("5.5", "Đã mua -> video 200", "GET", f"/api/courses/{middle_java}/video", token=token, expect=200)
+    if video and video.get("source") == "STORAGE":
+        signed = video["videoUrl"]
+        d.direct("5.5a", "Mở link có chữ ký -> phát được video", "GET", signed, expect=200)
+        d.direct("5.5b", "Bỏ chữ ký khỏi link -> 403", "GET", signed.split("?")[0], expect=403)
     time.sleep(1.5)
     d.call("5.6", "Thông báo đơn hàng (Observer)", "GET", "/api/notifications", token=token, expect=200)
 

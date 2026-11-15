@@ -377,8 +377,13 @@
   });
   async function showVideo(courseId) {
     const video = await api('/api/courses/' + courseId + '/video');
-    $('#player').replaceChildren(h('h3', {}, video.title),
-      h('iframe', { class: 'video', src: video.youtubeEmbedUrl, title: video.title, allow: 'accelerometer; encrypted-media; picture-in-picture', allowfullscreen: true }));
+    const player = video.source === 'STORAGE'
+      ? h('video', { class: 'video', src: video.videoUrl, controls: true, preload: 'metadata', playsinline: true, 'data-source': 'storage' })
+      : h('iframe', { class: 'video', src: video.youtubeEmbedUrl, title: video.title, allow: 'accelerometer; encrypted-media; picture-in-picture', allowfullscreen: true, 'data-source': 'youtube' });
+    const note = video.source === 'STORAGE'
+      ? 'Video lưu trên object storage · link riêng hết hạn lúc ' + when(video.expiresAt)
+      : 'Video YouTube (khóa học chưa có video tải lên)';
+    $('#player').replaceChildren(h('h3', {}, video.title), player, h('p', { class: 'muted', style: 'font-size:.82rem; margin-top:8px' }, note));
   }
 
   const loadNotifications = run(async () => {
@@ -413,14 +418,18 @@
   const loadAdminProducts = run(async () => {
     const courses = await api('/api/admin/courses');
     $('#admin-products').replaceChildren(h('table', {},
-      h('thead', {}, h('tr', {}, ['ID', 'Khóa học', 'Giá', 'Trạng thái', ''].map(t => h('th', {}, t)))),
+      h('thead', {}, h('tr', {}, ['ID', 'Khóa học', 'Giá', 'Trạng thái', 'Video', ''].map(t => h('th', {}, t)))),
       h('tbody', {}, courses.map(course => h('tr', { 'data-admin-course': course.id },
         h('td', { class: 'mono' }, course.id),
         h('td', {}, h('b', {}, course.title), h('div', { class: 'muted mono' }, course.slug)),
         h('td', {}, money(course.price)),
         h('td', {}, course.active ? badge('Đang bán', 'active') : badge('Ngừng bán', 'inactive')),
+        h('td', { 'data-video-cell': course.id },
+          course.videoKey ? badge('Storage', 'active') : badge('YouTube', 'PENDING'),
+          course.videoSizeBytes ? h('div', { class: 'muted mono', style: 'font-size:.75rem' }, (course.videoSizeBytes / 1048576).toFixed(1) + ' MB') : null),
         h('td', { class: 'row' },
           h('button', { class: 'ghost small', onclick: () => editProduct(course) }, 'Sửa'),
+          h('button', { class: 'ghost small', onclick: () => pickVideo(course) }, 'Tải video'),
           course.active ? h('button', { class: 'danger small', onclick: run(async () => {
             if (!confirm('Ngừng bán “' + course.title + '”?')) return;
             await api('/api/admin/courses/' + course.id, { method: 'DELETE' });
@@ -429,6 +438,34 @@
           }) }, 'Ngừng bán') : null)
       )))));
   });
+  // Video upload: 1) ask the API for a presigned URL, 2) PUT the file straight to object storage, 3) confirm.
+  function pickVideo(course) {
+    const input = h('input', { type: 'file', accept: 'video/mp4,video/webm,video/quicktime', style: 'display:none' });
+    input.addEventListener('change', run(() => input.files[0] && uploadVideo(course, input.files[0])));
+    document.body.append(input);
+    input.click();
+    setTimeout(() => input.remove(), 60000);
+  }
+  async function uploadVideo(course, file) {
+    const cell = document.querySelector(`[data-video-cell="${course.id}"]`);
+    const progress = h('div', { class: 'mono', 'data-upload-progress': course.id }, 'Đang chuẩn bị…');
+    cell.replaceChildren(progress);
+    const ticket = await api('/api/admin/courses/' + course.id + '/video/upload-url', { method: 'POST',
+      body: { fileName: file.name, contentType: file.type || 'video/mp4', sizeBytes: file.size } });
+    await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open(ticket.method, ticket.uploadUrl);
+      Object.entries(ticket.headers || {}).forEach(([key, value]) => xhr.setRequestHeader(key, value));
+      xhr.upload.onprogress = (event) => { if (event.lengthComputable) progress.textContent = 'Đang tải ' + Math.round(event.loaded * 100 / event.total) + '%'; };
+      xhr.onload = () => xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error('Upload lỗi HTTP ' + xhr.status));
+      xhr.onerror = () => reject(new Error('Không kết nối được tới kho lưu trữ video'));
+      xhr.send(file);
+    });
+    await api('/api/admin/courses/' + course.id + '/video', { method: 'PUT', body: { key: ticket.key } });
+    toast('Đã tải video lên cho “' + course.title + '”');
+    loadAdminProducts();
+  }
+
   function editProduct(course) {
     const form = $('#product-form');
     ['id', 'slug', 'title', 'description', 'price', 'youtubeUrl'].forEach(key => { form[key].value = course[key] ?? ''; });

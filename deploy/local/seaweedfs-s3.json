@@ -1,0 +1,11 @@
+{
+  "identities": [
+    {
+      "name": "study_coach_local",
+      "credentials": [
+        { "accessKey": "study_coach", "secretKey": "study_coach_local_secret" }
+      ],
+      "actions": ["Admin", "Read", "Write", "List", "Tagging"]
+    }
+  ]
+}

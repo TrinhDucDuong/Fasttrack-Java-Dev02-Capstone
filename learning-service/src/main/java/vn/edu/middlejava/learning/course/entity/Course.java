@@ -37,6 +37,19 @@ public class Course {
     @Column(nullable = false)
     private boolean active = true;
 
+    /** Object key in S3 / SeaweedFS. The video bytes live in object storage, never in the database. */
+    @Column(name = "video_key", length = 300)
+    private String videoKey;
+
+    @Column(name = "video_content_type", length = 100)
+    private String videoContentType;
+
+    @Column(name = "video_size_bytes")
+    private Long videoSizeBytes;
+
+    @Column(name = "video_uploaded_at")
+    private java.time.Instant videoUploadedAt;
+
     protected Course() {
     }
 
@@ -64,6 +77,21 @@ public class Course {
         this.active = false;
     }
 
+    public void attachVideo(String key, String contentType, long sizeBytes) {
+        this.videoKey = key;
+        this.videoContentType = contentType;
+        this.videoSizeBytes = sizeBytes;
+        this.videoUploadedAt = java.time.Instant.now();
+    }
+
+    public boolean hasStoredVideo() {
+        return videoKey != null && !videoKey.isBlank();
+    }
+
+    public String getVideoKey() { return videoKey; }
+    public String getVideoContentType() { return videoContentType; }
+    public Long getVideoSizeBytes() { return videoSizeBytes; }
+    public java.time.Instant getVideoUploadedAt() { return videoUploadedAt; }
     public boolean isActive() { return active; }
     public java.math.BigDecimal getPrice() { return price; }
     public String getYoutubeUrl() { return youtubeUrl; }

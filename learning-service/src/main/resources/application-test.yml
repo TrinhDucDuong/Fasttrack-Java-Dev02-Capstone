@@ -19,3 +19,6 @@ spring:
 eureka:
   client:
     enabled: false
+app:
+  video-storage:
+    create-bucket: false

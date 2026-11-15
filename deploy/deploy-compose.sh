@@ -45,6 +45,7 @@ trap 'rm -f "$env_file"' EXIT
   printf 'RABBITMQ_PASSWORD=%s\n' "$(get_parameter rabbitmq-password)"
   printf 'GROQ_API_KEY=%s\n' "$(get_parameter groq-api-key)"
   printf 'BACKUP_BUCKET=%s\n' "$(get_parameter backup-bucket)"
+  printf 'VIDEO_BUCKET=%s\n' "$(get_parameter video-bucket)"
 } > "$env_file"
 chmod 600 "$env_file"
 mv "$env_file" "$APP_DIR/.env"

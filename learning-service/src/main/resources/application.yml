@@ -57,6 +57,19 @@ management:
       show-details: when_authorized
 
 app:
+  video-storage:
+    # Local default: SeaweedFS from docker-compose (S3-compatible). On AWS the endpoint and keys are blank,
+    # so the SDK talks to Amazon S3 with the EC2 instance role.
+    bucket: ${VIDEO_BUCKET:course-videos}
+    region: ${AWS_REGION:ap-southeast-2}
+    endpoint: ${VIDEO_STORAGE_ENDPOINT:http://localhost:8333}
+    access-key: ${VIDEO_STORAGE_ACCESS_KEY:study_coach}
+    secret-key: ${VIDEO_STORAGE_SECRET_KEY:study_coach_local_secret}
+    path-style: ${VIDEO_STORAGE_PATH_STYLE:true}
+    create-bucket: ${VIDEO_STORAGE_CREATE_BUCKET:true}
+    upload-url-ttl: 15m
+    playback-url-ttl: 1h
+    max-upload-bytes: 524288000
   admin:
     email: ${ADMIN_EMAIL:}
     password: ${ADMIN_PASSWORD:}
@@ -81,3 +94,6 @@ spring:
           use_second_level_cache: false
   flyway:
     enabled: false
+app:
+  video-storage:
+    create-bucket: false

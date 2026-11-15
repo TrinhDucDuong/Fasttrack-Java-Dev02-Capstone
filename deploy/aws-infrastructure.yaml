@@ -518,11 +518,11 @@ Resources:
                 Action:
                   - s3:PutObject
                   - s3:GetObject
-                Resource: !Sub ${VideoBucket.Arn}/courses/*
+                Resource: !Sub arn:${AWS::Partition}:s3:::${AWS::AccountId}-${AWS::Region}-studycoach-course-videos/courses/*
               - Sid: ListVideoBucket
                 Effect: Allow
                 Action: s3:ListBucket
-                Resource: !GetAtt VideoBucket.Arn
+                Resource: !Sub arn:${AWS::Partition}:s3:::${AWS::AccountId}-${AWS::Region}-studycoach-course-videos
       Tags:
         - Key: Project
           Value: study-coach

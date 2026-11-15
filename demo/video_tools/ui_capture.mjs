@@ -59,6 +59,16 @@ try {
       await evaluate(`(async () => { ${step.js} })()`);
       await sleep(step.wait ?? 1200);
     }
+    if (step.files) {
+      // Set a file on an <input type=file> (fires input/change like a real file pick)
+      const { root } = await send('DOM.getDocument', { depth: -1 });
+      const { nodeId } = await send('DOM.querySelector', { nodeId: root.nodeId, selector: step.files.selector });
+      await send('DOM.setFileInputFiles', { nodeId, files: [step.files.path] });
+      await sleep(step.files.wait ?? 3000);
+    }
+    if (step.check) {
+      console.log('  check', step.check, JSON.stringify(await evaluate(step.check)));
+    }
     if (step.shot) {
       const boxes = await evaluate(`(${JSON.stringify(step.boxes || [])}).map(sel => {
         let el;

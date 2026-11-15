@@ -28,7 +28,7 @@ Hệ thống bán khóa học Java quay sẵn (sản phẩm = khóa học, video
 | Unit test Service + Mockito | `CartServiceImplTest`, `OrderServiceImplTest`, `AdminOrderServiceImplTest`, `CourseServiceImplTest`, `PaymentFactoryMethodTest`, `CartPricingCalculatorTest`, `OrderEventPublisherTest` | Mock repository, `ApplicationEventPublisher`, `ICourseEnrollmentService`; `ArgumentCaptor` kiểm tra event được publish. |
 | Integration test luồng đặt hàng | `PostgresCommerceIntegrationTest` (Testcontainers: PostgreSQL + RabbitMQ thật), `LearningServiceContextTest` (MockMvc, gọi HTTP đầy đủ với JWT) | Kiểm tra: Flyway V1–V5, index, checkout VNPay, COD + ADMIN xác nhận, rollback, thông báo bất đồng bộ, phân quyền 403/404/409. |
 
-Tổng cộng 42 test ở `learning-service`, chạy tự động trong GitHub Actions trước mỗi lần deploy.
+Tổng cộng 53 test ở `learning-service`, chạy tự động trong GitHub Actions trước mỗi lần deploy.
 
 ## 2. SOLID
 
@@ -49,6 +49,14 @@ Tổng cộng 42 test ở `learning-service`, chạy tự động trong GitHub A
 | **Observer** | Subject `OrderEventPublisher`; Observer `OrderStatusObserver` → `InAppNotificationObserver`, `EmailNotificationObserver`; Event `OrderStatusChangedEvent` | Đơn hàng không cần biết có bao nhiêu kênh thông báo. Thêm hoặc bớt kênh không ảnh hưởng nghiệp vụ đặt hàng. Kết hợp `CompletableFuture` + `ExecutorService` để thông báo không làm chậm request. |
 | Repository / DTO / Mapper | Spring Data repository, record DTO, `CommerceMapper`, `CourseMapper` | Tách tầng dữ liệu và tầng API; entity không lộ ra ngoài. |
 
+## Mở rộng ngoài đề: lưu video trên object storage
+
+- File video nằm ở **S3 private** (AWS) hoặc **SeaweedFS** tương thích S3 (local); database chỉ lưu metadata (`video_key`, loại file, dung lượng).
+- **DIP:** service phụ thuộc interface `IVideoStorage`, không biết đến SDK. `S3VideoStorage` là bản cài đặt duy nhất, chạy được cả hai môi trường nhờ cấu hình (endpoint, credential).
+- **SRP:** `CourseVideoAdminServiceImpl` chỉ xử lý upload; `CourseEnrollmentServiceImpl` quyết định ai được xem và cấp link.
+- **Bảo mật:** upload qua presigned PUT (15 phút, ký cả `Content-Type` và `Content-Length`); xem qua link có chữ ký (1 giờ) chỉ cấp cho người đã mua; bucket chặn public, bắt buộc HTTPS, chỉ cho CORS từ domain CloudFront; EC2 dùng IAM role, không có access key.
+- **Test:** Testcontainers chạy SeaweedFS thật, kiểm tra link không chữ ký, bị sửa hoặc hết hạn đều bị từ chối.
+
 ## 4. API chính
 
 | Method | Endpoint | Role |
@@ -62,4 +70,6 @@ Tổng cộng 42 test ở `learning-service`, chạy tự động trong GitHub A
 | GET | `/api/admin/orders` | ADMIN |
 | PUT | `/api/admin/orders/{id}/confirm-payment` | ADMIN |
 | GET | `/api/notifications` | đã đăng nhập |
-| GET | `/api/courses/{id}/video` | đã mua |
+| GET | `/api/courses/{id}/video` | đã mua (trả link có chữ ký 1 giờ nếu video nằm trên object storage) |
+| POST | `/api/admin/courses/{id}/video/upload-url` | ADMIN (presigned PUT URL) |
+| PUT | `/api/admin/courses/{id}/video` | ADMIN (xác nhận file đã upload) |

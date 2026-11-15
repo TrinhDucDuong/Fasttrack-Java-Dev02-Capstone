@@ -9,4 +9,5 @@ import java.util.Optional;
 public interface CustomerOrderRepository extends JpaRepository<CustomerOrder, Long> {
     Optional<CustomerOrder> findByIdAndUserId(Long id, Long userId);
     List<CustomerOrder> findByUserIdOrderByCreatedAtDesc(Long userId);
+    List<CustomerOrder> findAllByOrderByCreatedAtDesc();
 }

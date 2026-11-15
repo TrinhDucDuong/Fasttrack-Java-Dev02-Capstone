@@ -51,7 +51,7 @@ class CourseServiceImplTest {
 
     @Test
     void mapsCourseList() {
-        when(courseRepository.findAll()).thenReturn(List.of(new Course("middle-java", "Middle Java", "Course")));
+        when(courseRepository.findByActiveTrueOrderByIdAsc()).thenReturn(List.of(new Course("middle-java", "Middle Java", "Course")));
 
         List<CourseResponse> result = service.getCourses();
 

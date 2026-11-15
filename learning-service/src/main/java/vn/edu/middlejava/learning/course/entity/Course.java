@@ -34,6 +34,9 @@ public class Course {
     @Column(name = "youtube_url", length = 500)
     private String youtubeUrl;
 
+    @Column(nullable = false)
+    private boolean active = true;
+
     protected Course() {
     }
 
@@ -56,6 +59,12 @@ public class Course {
         this.youtubeUrl = youtubeUrl;
     }
 
+    /** Soft delete: past orders keep pointing at the course, but it can no longer be sold. */
+    public void deactivate() {
+        this.active = false;
+    }
+
+    public boolean isActive() { return active; }
     public java.math.BigDecimal getPrice() { return price; }
     public String getYoutubeUrl() { return youtubeUrl; }
     public Long getId() { return id; }

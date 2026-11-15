@@ -9,6 +9,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import vn.edu.middlejava.learning.exception.ResourceNotFoundException;
+
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,15 +56,23 @@ public class ShoppingCart {
         validateQuantity(quantity);
         ShoppingCartItem item = findItem(courseId);
         if (item == null) {
-            throw new IllegalArgumentException("Course is not in cart");
+            throw new ResourceNotFoundException("Course is not in cart");
         }
         item.setQuantity(quantity);
         updatedAt = Instant.now();
     }
 
-    public void remove(Long courseId) {
-        items.removeIf(item -> item.getCourseId().equals(courseId));
-        updatedAt = Instant.now();
+    /** @return true when the course was in the cart and has been removed */
+    public boolean remove(Long courseId) {
+        boolean removed = items.removeIf(item -> item.getCourseId().equals(courseId));
+        if (removed) {
+            updatedAt = Instant.now();
+        }
+        return removed;
+    }
+
+    public boolean isEmpty() {
+        return items.isEmpty();
     }
 
     public void clear() {

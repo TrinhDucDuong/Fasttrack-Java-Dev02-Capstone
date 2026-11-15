@@ -14,68 +14,45 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import vn.edu.middlejava.learning.commerce.dto.AddCartItemRequest;
 import vn.edu.middlejava.learning.commerce.dto.CartResponse;
-import vn.edu.middlejava.learning.commerce.dto.CheckoutRequest;
-import vn.edu.middlejava.learning.commerce.dto.OrderResponse;
 import vn.edu.middlejava.learning.commerce.dto.UpdateCartItemRequest;
-import vn.edu.middlejava.learning.commerce.service.ICommerceService;
-
-import java.util.List;
+import vn.edu.middlejava.learning.commerce.service.ICartService;
 
 @RestController
-@RequestMapping("/api")
-public class CommerceControllerImpl implements ICommerceController {
-    private final ICommerceService commerceService;
+@RequestMapping("/api/cart")
+public class CartControllerImpl implements ICartController {
+    private final ICartService cartService;
 
-    public CommerceControllerImpl(ICommerceService commerceService) {
-        this.commerceService = commerceService;
+    public CartControllerImpl(ICartService cartService) {
+        this.cartService = cartService;
     }
 
     @Override
-    @GetMapping("/cart")
+    @GetMapping
     public CartResponse getCart(@AuthenticationPrincipal Jwt jwt) {
-        return commerceService.getCart(userId(jwt));
+        return cartService.getCart(userId(jwt));
     }
 
     @Override
-    @PostMapping("/cart/items")
+    @PostMapping("/items")
     public CartResponse addCartItem(@AuthenticationPrincipal Jwt jwt,
                                     @Valid @RequestBody AddCartItemRequest request) {
-        return commerceService.addToCart(userId(jwt), request);
+        return cartService.addToCart(userId(jwt), request);
     }
 
     @Override
-    @PutMapping("/cart/items/{courseId}")
+    @PutMapping("/items/{courseId}")
     public CartResponse updateCartItem(@AuthenticationPrincipal Jwt jwt,
                                        @PathVariable("courseId") Long courseId,
                                        @Valid @RequestBody UpdateCartItemRequest request) {
-        return commerceService.updateCartItem(userId(jwt), courseId, request.quantity());
+        return cartService.updateCartItem(userId(jwt), courseId, request.quantity());
     }
 
     @Override
-    @DeleteMapping("/cart/items/{courseId}")
+    @DeleteMapping("/items/{courseId}")
     public ResponseEntity<Void> removeCartItem(@AuthenticationPrincipal Jwt jwt,
                                                @PathVariable("courseId") Long courseId) {
-        commerceService.removeCartItem(userId(jwt), courseId);
+        cartService.removeCartItem(userId(jwt), courseId);
         return ResponseEntity.noContent().build();
-    }
-
-    @Override
-    @PostMapping("/orders")
-    public ResponseEntity<OrderResponse> checkout(@AuthenticationPrincipal Jwt jwt,
-                                                  @Valid @RequestBody CheckoutRequest request) {
-        return ResponseEntity.status(201).body(commerceService.checkout(userId(jwt), request));
-    }
-
-    @Override
-    @GetMapping("/orders")
-    public List<OrderResponse> getOrders(@AuthenticationPrincipal Jwt jwt) {
-        return commerceService.getOrders(userId(jwt));
-    }
-
-    @Override
-    @GetMapping("/orders/{orderId}")
-    public OrderResponse getOrder(@AuthenticationPrincipal Jwt jwt, @PathVariable("orderId") Long orderId) {
-        return commerceService.getOrder(userId(jwt), orderId);
     }
 
     private Long userId(Jwt jwt) {

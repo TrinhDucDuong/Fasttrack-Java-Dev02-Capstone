@@ -32,6 +32,9 @@ public class CustomerOrder {
     @Column(name = "payment_status", nullable = false, length = 30)
     private String paymentStatus;
 
+    @Column(name = "payment_reference", length = 64)
+    private String paymentReference;
+
     @Column(nullable = false, length = 30)
     private String status;
 
@@ -44,12 +47,39 @@ public class CustomerOrder {
     protected CustomerOrder() {
     }
 
+    public static final String PAYMENT_PAID = "PAID";
+    public static final String STATUS_CONFIRMED = "CONFIRMED";
+    public static final String STATUS_AWAITING_PAYMENT = "AWAITING_PAYMENT";
+
     public CustomerOrder(Long userId, BigDecimal total, String paymentMethod, String paymentStatus) {
+        this(userId, total, paymentMethod, paymentStatus, null);
+    }
+
+    public CustomerOrder(Long userId, BigDecimal total, String paymentMethod, String paymentStatus,
+                         String paymentReference) {
         this.userId = userId;
         this.total = total;
         this.paymentMethod = paymentMethod;
         this.paymentStatus = paymentStatus;
-        this.status = "PAID".equals(paymentStatus) ? "CONFIRMED" : "AWAITING_PAYMENT";
+        this.paymentReference = paymentReference;
+        this.status = PAYMENT_PAID.equals(paymentStatus) ? STATUS_CONFIRMED : STATUS_AWAITING_PAYMENT;
+    }
+
+    /** Admin confirms that money for a COD or bank-transfer order has been received. */
+    public void confirmPayment() {
+        if (isPaid()) {
+            throw new IllegalStateException("Order " + id + " is already paid");
+        }
+        this.paymentStatus = PAYMENT_PAID;
+        this.status = STATUS_CONFIRMED;
+    }
+
+    public boolean isPaid() {
+        return PAYMENT_PAID.equals(paymentStatus);
+    }
+
+    public List<Long> courseIds() {
+        return items.stream().map(CustomerOrderItem::getCourseId).toList();
     }
     public void addItem(Long courseId, String title, BigDecimal price, int quantity) {
         if (quantity < 1) {
@@ -66,6 +96,7 @@ public class CustomerOrder {
     public BigDecimal getTotal() { return total; }
     public String getPaymentMethod() { return paymentMethod; }
     public String getPaymentStatus() { return paymentStatus; }
+    public String getPaymentReference() { return paymentReference; }
     public String getStatus() { return status; }
     public Instant getCreatedAt() { return createdAt; }
     public List<CustomerOrderItem> getItems() { return items; }

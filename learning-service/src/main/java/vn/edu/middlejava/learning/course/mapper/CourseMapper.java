@@ -22,7 +22,7 @@ public class CourseMapper {
 
     public CourseAdminResponse toAdminResponse(Course course) {
         return new CourseAdminResponse(course.getId(), course.getSlug(), course.getTitle(),
-                course.getDescription(), course.getPrice(), course.getYoutubeUrl());
+                course.getDescription(), course.getPrice(), course.getYoutubeUrl(), course.isActive());
     }
 
     public CourseVideoResponse toVideoResponse(Course course) {

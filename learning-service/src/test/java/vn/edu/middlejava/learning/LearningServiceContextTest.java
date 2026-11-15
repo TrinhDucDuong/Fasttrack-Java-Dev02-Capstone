@@ -16,7 +16,8 @@ import vn.edu.middlejava.learning.auth.repository.IStudyUserRepository;
 import vn.edu.middlejava.learning.commerce.repository.CustomerOrderRepository;
 import vn.edu.middlejava.learning.commerce.dto.AddCartItemRequest;
 import vn.edu.middlejava.learning.commerce.dto.CheckoutRequest;
-import vn.edu.middlejava.learning.commerce.service.ICommerceService;
+import vn.edu.middlejava.learning.commerce.service.ICartService;
+import vn.edu.middlejava.learning.commerce.service.IOrderService;
 import vn.edu.middlejava.learning.course.entity.Course;
 import vn.edu.middlejava.learning.course.repository.ICourseEnrollmentRepository;
 import vn.edu.middlejava.learning.course.repository.ICourseRepository;
@@ -54,7 +55,10 @@ class LearningServiceContextTest {
     private IStudyUserRepository userRepository;
 
     @Autowired
-    private ICommerceService commerceService;
+    private ICartService cartService;
+
+    @Autowired
+    private IOrderService orderService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -84,8 +88,8 @@ class LearningServiceContextTest {
                 "Integration Java Course", "Integration-test product", new BigDecimal("25.50"),
                 "https://www.youtube.com/watch?v=GoXwIVyNvX0"));
 
-        commerceService.addToCart(user.getId(), new AddCartItemRequest(course.getId(), 2));
-        var order = commerceService.checkout(user.getId(), new CheckoutRequest("SIMULATED"));
+        cartService.addToCart(user.getId(), new AddCartItemRequest(course.getId(), 2));
+        var order = orderService.checkout(user.getId(), new CheckoutRequest("VNPAY"));
 
         assertThat(order.total()).isEqualByComparingTo("51.00");
         assertThat(order.paymentStatus()).isEqualTo("PAID");
@@ -93,8 +97,8 @@ class LearningServiceContextTest {
             assertThat(item.courseTitle()).isEqualTo("Integration Java Course");
             assertThat(item.price()).isEqualByComparingTo("25.50");
         });
-        assertThat(commerceService.getCart(user.getId()).items()).isEmpty();
-        assertThat(commerceService.getOrder(user.getId(), order.id()).total()).isEqualByComparingTo("51.00");
+        assertThat(cartService.getCart(user.getId()).items()).isEmpty();
+        assertThat(orderService.getOrder(user.getId(), order.id()).total()).isEqualByComparingTo("51.00");
         assertThat(enrollmentRepository.existsByUserIdAndCourseId(user.getId(), course.getId())).isTrue();
     }
 
@@ -147,7 +151,7 @@ class LearningServiceContextTest {
         JsonNode paidOrder = objectMapper.readTree(mockMvc.perform(post("/api/orders")
                         .header("Authorization", "Bearer " + customerToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"paymentMethod\":\"SIMULATED\"}"))
+                        .content("{\"paymentMethod\":\"VNPAY\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.total").value(59.98))
                 .andExpect(jsonPath("$.paymentStatus").value("PAID"))
@@ -172,20 +176,36 @@ class LearningServiceContextTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"courseId\":" + pendingCourse.getId() + ",\"quantity\":1}"))
                 .andExpect(status().isOk());
-        mockMvc.perform(post("/api/orders")
+        JsonNode codOrder = objectMapper.readTree(mockMvc.perform(post("/api/orders")
                         .header("Authorization", "Bearer " + customerToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"paymentMethod\":\"BANK_TRANSFER\"}"))
+                        .content("{\"paymentMethod\":\"COD\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.paymentStatus").value("PENDING"))
-                .andExpect(jsonPath("$.status").value("AWAITING_PAYMENT"));
+                .andExpect(jsonPath("$.status").value("AWAITING_PAYMENT"))
+                .andReturn().getResponse().getContentAsString());
+        long codOrderId = codOrder.path("id").asLong();
         mockMvc.perform(get("/api/courses/{courseId}/video", pendingCourse.getId())
+                        .header("Authorization", "Bearer " + customerToken))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(put("/api/admin/orders/{id}/confirm-payment", codOrderId)
                         .header("Authorization", "Bearer " + customerToken))
                 .andExpect(status().isForbidden());
 
         StudyUser admin = userRepository.save(new StudyUser("admin-" + UUID.randomUUID() + "@example.test",
                 passwordEncoder.encode("AdminPass123!"), "ADMIN"));
         String adminToken = loginAndGetToken(admin.getEmail(), "AdminPass123!");
+        mockMvc.perform(put("/api/admin/orders/{id}/confirm-payment", codOrderId)
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.paymentStatus").value("PAID"))
+                .andExpect(jsonPath("$.status").value("CONFIRMED"));
+        mockMvc.perform(put("/api/admin/orders/{id}/confirm-payment", codOrderId)
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isConflict());
+        mockMvc.perform(get("/api/courses/{courseId}/video", pendingCourse.getId())
+                        .header("Authorization", "Bearer " + customerToken))
+                .andExpect(status().isOk());
         mockMvc.perform(post("/api/admin/courses")
                         .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)

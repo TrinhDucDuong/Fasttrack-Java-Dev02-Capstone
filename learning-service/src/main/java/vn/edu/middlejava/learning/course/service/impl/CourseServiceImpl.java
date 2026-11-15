@@ -27,13 +27,17 @@ public class CourseServiceImpl implements ICourseService {
 
     @Override
     public List<CourseResponse> getCourses() {
-        return courseRepository.findAll().stream().map(courseMapper::toResponse).toList();
+        return courseRepository.findByActiveTrueOrderByIdAsc().stream().map(courseMapper::toResponse).toList();
     }
 
     @Override
     public List<CourseResponse> searchCourses(String query) {
-        if (query == null || query.isBlank()) return getCourses();
-        return courseRepository.findByTitleContainingIgnoreCase(query.trim()).stream().map(courseMapper::toResponse).toList();
+        return java.util.Optional.ofNullable(query)
+                .map(String::trim)
+                .filter(text -> !text.isEmpty())
+                .map(courseRepository::findByActiveTrueAndTitleContainingIgnoreCaseOrderByIdAsc)
+                .map(found -> found.stream().map(courseMapper::toResponse).toList())
+                .orElseGet(this::getCourses);
     }
 
     @Override

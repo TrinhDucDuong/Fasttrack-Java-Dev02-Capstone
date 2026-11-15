@@ -43,6 +43,14 @@ jobs:
           distribution: temurin
           java-version: '17'
           cache: maven
+      - name: Validate cloud admin credentials
+        shell: bash
+        env:
+          ADMIN_EMAIL: ${{ vars.ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+        run: |
+          test -n "$ADMIN_EMAIL"
+          test -n "$ADMIN_PASSWORD"
       - run: mvn -B -DskipTests package
       - name: Log in to Amazon ECR
         id: ecr
@@ -69,6 +77,14 @@ jobs:
         run: |
           test -n "$GROQ_API_KEY"
           aws ssm put-parameter --name /studycoach/prod/groq-api-key --type SecureString --value "$GROQ_API_KEY" --overwrite >/dev/null
+      - name: Store cloud admin credentials in AWS Parameter Store
+        shell: bash
+        env:
+          ADMIN_EMAIL: ${{ vars.ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+        run: |
+          aws ssm put-parameter --name /studycoach/prod/admin-email --type SecureString --value "$ADMIN_EMAIL" --overwrite >/dev/null
+          aws ssm put-parameter --name /studycoach/prod/admin-password --type SecureString --value "$ADMIN_PASSWORD" --overwrite >/dev/null
       - name: Deploy on EC2 through Systems Manager
         shell: bash
         env:

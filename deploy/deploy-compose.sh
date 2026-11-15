@@ -38,6 +38,8 @@ trap 'rm -f "$env_file"' EXIT
   printf 'DB_HOST=%s\n' "$(get_parameter db-host)"
   printf 'DB_USERNAME=%s\n' "$(get_parameter db-username)"
   printf 'DB_PASSWORD=%s\n' "$(get_parameter db-password)"
+  printf 'ADMIN_EMAIL=%s\n' "$(get_parameter admin-email)"
+  printf 'ADMIN_PASSWORD=%s\n' "$(get_parameter admin-password)"
   printf 'JWT_SECRET=%s\n' "$(get_parameter jwt-secret)"
   printf 'RABBITMQ_USERNAME=%s\n' "$(get_parameter rabbitmq-username)"
   printf 'RABBITMQ_PASSWORD=%s\n' "$(get_parameter rabbitmq-password)"

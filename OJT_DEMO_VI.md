@@ -67,7 +67,7 @@ Content-Type: application/json
 {"email":"customer.demo@example.com","password":"DemoPassword123!"}
 ```
 
-Đăng nhập bằng `POST {{baseUrl}}/api/auth/login` với cùng body. Lưu `accessToken` vào biến `accessToken`. Đăng nhập bằng tài khoản ADMIN local đã nêu ở phần chuẩn bị và lưu token vào `adminToken`.
+Đăng nhập bằng `POST {{baseUrl}}/api/auth/login` với cùng body. Lưu `accessToken` vào biến `accessToken`. Khi demo local, đăng nhập bằng tài khoản ADMIN local đã nêu ở phần chuẩn bị. Khi demo AWS, đăng nhập bằng tài khoản ADMIN đã được cấu hình trong GitHub Actions/AWS Parameter Store. Lưu token ADMIN vào `adminToken`; không lưu mật khẩu vào Postman collection export.
 
 Gọi `POST {{baseUrl}}/api/admin/courses` bằng `accessToken` của CUSTOMER; kết quả mong đợi là `403 Forbidden`. Gọi `GET {{baseUrl}}/api/courses/{{courseId}}/units` bằng token hợp lệ, lấy id unit đầu tiên lưu vào `unitId`.
 

@@ -330,10 +330,13 @@ Resources:
                   - !GetAtt GatewayRepository.Arn
                   - !GetAtt LearningRepository.Arn
                   - !GetAtt AiRepository.Arn
-              - Sid: StoreGroqKey
+              - Sid: StoreApplicationSecrets
                 Effect: Allow
                 Action: ssm:PutParameter
-                Resource: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/studycoach/prod/groq-api-key
+                Resource:
+                  - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/studycoach/prod/groq-api-key
+                  - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/studycoach/prod/admin-email
+                  - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/studycoach/prod/admin-password
               - Sid: EncryptSecureParameters
                 Effect: Allow
                 Action: kms:Encrypt

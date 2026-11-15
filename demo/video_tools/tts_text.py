@@ -208,6 +208,19 @@ TERMS = {
     "web": "web",
 }
 
+# Pronunciations edited by hand in phien_am.csv (column phien_am_moi, or phien_am_hien_tai) override the defaults.
+import csv as _csv
+from pathlib import Path as _Path
+
+_CSV = _Path(__file__).with_name("phien_am.csv")
+if _CSV.exists():
+    with open(_CSV, encoding="utf-8-sig") as _fh:
+        for _row in _csv.DictReader(_fh):
+            _value = (_row.get("phien_am_moi") or "").strip() or (_row.get("phien_am_hien_tai") or "").strip()
+            if _value:
+                for _key in [k for k in TERMS if k.lower() == _row["thuat_ngu"].strip().lower()] or [_row["thuat_ngu"].strip()]:
+                    TERMS[_key] = _value
+
 _LOWER = {k.lower(): v for k, v in TERMS.items()}
 _KEYS = sorted(_LOWER, key=len, reverse=True)
 _PATTERN = re.compile("|".join(r"(?<![\w-])" + re.escape(k) + r"(?![\w-])" for k in _KEYS), re.IGNORECASE)

@@ -1,251 +1,251 @@
 1
-00:00:00,300 --> 00:00:21,000
-Xin chào thầy và các bạn, em là Trịnh Đức Dương. Đây là đê-mô bài âu di ti i com-mơ-xơ mi-ni của em: mít-đồ gia-va xờ-to, cửa hàng bán khóa học gia-va. Phần chính bám sát sáu yêu cầu của đề, đê-mô trên lâu-cồ với cả hai vai trò át-min và cát-xtơ-mơ. Phần mở rộng ở cuối là xi ai xi đi và triển khai lên ây đắp-liu ét.
+00:00:00,300 --> 00:00:20,800
+Xin chào thầy và các bạn, em là Trịnh Đức Dương. Đây là đề mô bài âu di ti e com mợc mi ni của em: mít-đồ gia-va xờ-to, cửa hàng bán khóa học gia-va. Phần chính bám sát sáu yêu cầu của đề, đề mô trên lô cồ với cả hai vai trò át-min và cớt từm mờ. Phần mở rộng ở cuối là xi ai xi đi và triển khai lên a đáp liu ét.
 
 2
-00:00:21,500 --> 00:00:29,900
+00:00:21,300 --> 00:00:29,700
 Bảng này đối chiếu đề bài với phần em đã làm: xác thực, sản phẩm, giỏ hàng, đặt hàng, thanh toán, thông báo và kiểm thử.
 
 3
-00:00:30,400 --> 00:00:42,100
-ri-qoét đi qua ây-pi-ai ghết-uây, ghết-uây tìm xơ-vít qua iu-ri-ca. Toàn bộ nghiệp vụ nằm trong lơ-ninh xơ-vít, dữ liệu lưu ở pốt-gờ-rét, xơ-ki-ma quản lý bằng phờ-lai-guây.
+00:00:30,200 --> 00:00:42,000
+ri-quét đi qua ây-pi-ai ghết-guây, ghết-guây tìm sơ vít qua êu rê ca. Toàn bộ nghiệp vụ nằm trong lơn-ninh xơ-vít, dữ liệu lưu ở pót gờ ry, xờ-ki-ma quản lý bằng phờ-lai-guây.
 
 4
-00:00:42,600 --> 00:00:54,200
-Phần một, xác thực. xờ-pring xi-kiu-ri-ti đọc cờ-lêm rôn trong di, đắp-liu, ti để phân quyền. Mọi đường dẫn át-min chỉ dành cho át-min; cát-xtơ-mơ gọi vào sẽ nhận lỗi 403.
+00:00:42,500 --> 00:00:54,100
+Phần một, xác thực. xờ-pring xi-kiu-ri-ti đọc cờ-lêm rôn trong di, đáp-liu, ti để phân quyền. Mọi đường dẫn át-min chỉ dành cho át-min; cớt từm mờ gọi vào sẽ nhận lỗi 403.
 
 5
-00:00:54,700 --> 00:01:03,400
-Khi đăng nhập, xơ-vít phát hành ác-xét tô-kần mười lăm phút, chứa id, i-meo và rôn. Tài khoản đăng ký mới luôn là cát-xtơ-mơ.
+00:00:54,600 --> 00:01:03,400
+Khi đăng nhập, sơ vít phát hành ách sét tốc cừn mười lăm phút, chứa id, i-meo và rôn. Tài khoản đăng ký mới luôn là cớt từm mờ.
 
 6
-00:01:03,900 --> 00:01:16,500
-Phần hai, sản phẩm. Em tạo in-đéc gin trên ắp-pơ của tai-tồ. mé-thợt xờ-pring đây-ta di pi ây bên phải sinh câu lai khớp đúng biểu thức của in-đéc, nên tìm kiếm không phải quét toàn bảng.
+00:01:03,900 --> 00:01:16,600
+Phần hai, sản phẩm. Em tạo in đếch gin trên ắp-pơ của tai-tồ. me thót xờ-pring đây-ta di pi ây bên phải sinh câu lai khớp đúng biểu thức của in đếch, nên tìm kiếm không phải quét toàn bảng.
 
 7
-00:01:17,000 --> 00:01:25,700
-Theo ét a pi, phần quản trị sản phẩm của át-min là một xơ-vít riêng. Xóa sản phẩm là ngừng bán, đơn hàng cũ vẫn giữ lịch sử.
+00:01:17,100 --> 00:01:25,800
+Theo ét a pi, phần quản trị sản phẩm của át-min là một sơ vít riêng. Xóa sản phẩm là ngừng bán, đơn hàng cũ vẫn giữ lịch sử.
 
 8
-00:01:26,200 --> 00:01:37,600
-Phần ba, giỏ hàng với thêm, sửa số lượng và xóa. Em áp dụng ích-xờ-trắc mé-thợt: mé-thợt páp-lích chỉ vài dòng, các bước nhỏ tách thành mé-thợt prai-vết có tên rõ ràng.
+00:01:26,300 --> 00:01:37,700
+Phần ba, giỏ hàng với thêm, sửa số lượng và xóa. Em áp dụng ích trách me thốt: me thót pắp-lích chỉ vài dòng, các bước nhỏ tách thành me thót pờ rai-vết có tên rõ ràng.
 
 9
-00:01:38,100 --> 00:01:48,100
-Và ích-xờ-trắc cờ-lát: phần tính tiền bị lặp ở giỏ hàng và chéc-ao được tách thành cát prai-xinh can-kiu-lây-tơ, bên trong dùng xờ-trim ây-pi-ai.
+00:01:38,200 --> 00:01:48,200
+Và ích trách cờ lát: phần tính tiền bị lặp ở giỏ hàng và chếch ao được tách thành cạt pờ rai xinh côn kiu lây tơ, bên trong dùng xờ-trim ây-pi-ai.
 
 10
-00:01:48,600 --> 00:02:01,200
-Phần bốn, đặt hàng. chéc-ao chạy trong một tran-xắc-sần, dùng óp-sần-nồ để lấy giỏ và chặn giỏ rỗng. Lưu đơn, mở quyền học, làm trống giỏ và phát sự kiện. Bước nào lỗi thì tất cả rôn-béc.
+00:01:48,700 --> 00:02:01,400
+Phần bốn, đặt hàng. chếch ao chạy trong một chan séc xừn, dùng óp-sừn-nồ để lấy giỏ và chặn giỏ rỗng. Lưu đơn, mở quyền học, làm trống giỏ và phát sự kiện. Bước nào lỗi thì tất cả rôn-bách.
 
 11
-00:02:01,700 --> 00:02:19,000
-Phần năm, thanh toán. Lớp trừu tượng pây-mần prô-xét-xơ là cri-ây-tơ, có phác-tơ-ri mé-thợt cri-ết xờ-tra-tơ-gi. mé-thợt prô-xét chạy quy trình chung nhưng không biết xờ-tra-tơ-gi cụ thể; mỗi lớp con như vi-en-pây hay xi âu đi tự quyết định tạo xờ-tra-tơ-gi nào.
+00:02:01,900 --> 00:02:18,800
+Phần năm, thanh toán. Lớp trừu tượng pây-mừn pờ rô-xét-xơ là cờ rít tờ, có phách-to-ri me thót cờ rít xờ chết gi. me thót pờ rô-xét chạy quy trình chung nhưng không biết sờ chết gi cụ thể; mỗi lớp con như vi-en-pay hay cốt tự quyết định tạo sờ chết gi nào.
 
 12
-00:02:19,500 --> 00:02:32,300
-Sản phẩm của phác-tơ-ri là xờ-tra-tơ-gi. vi-en-pây giả lập trả pết kèm mã giao dịch; xi âu đi và chuyển khoản trả pen-đinh chờ át-min xác nhận. chéc-ao không có ịp en-xơ theo loại thanh toán.
+00:02:19,300 --> 00:02:31,600
+Sản phẩm của phách to ri là sờ chết gi. vi-en-pay giả lập trả pết kèm mã giao dịch; cốt và chuyển khoản trả pen-đinh chờ át-min xác nhận. chếch ao không có íp eo theo loại thanh toán.
 
 13
-00:02:32,800 --> 00:02:45,400
-xờ-pring tự đưa mọi prô-xét-xơ vào re-gít-xờ-tri. Muốn thêm mô-mô chỉ cần thêm một lớp mới, không sửa re-gít-xờ-tri hay chéc-ao; tét bên phải chứng minh điều đó. Đây là nguyên lý đóng mở.
+00:02:32,100 --> 00:02:44,500
+xờ-pring tự đưa mọi pờ rô-xét-xơ vào re git tri. Muốn thêm mô-mô chỉ cần thêm một lớp mới, không sửa re git tri hay chếch ao; tét bên phải chứng minh điều đó. Đây là nguyên lý đóng mở.
 
 14
-00:02:45,900 --> 00:02:59,700
-Phần sáu, thông báo, dùng ốp-dơ-vơ. pắp-li-sơ chỉ chạy sau khi tran-xắc-sần cơ-mít, gửi cho từng ốp-dơ-vơ bằng com-pli-tơ-bồ phiu-chơ trên ích-xê-kiu-tơ xơ-vít riêng. Một kênh lỗi không ảnh hưởng kênh khác.
+00:02:45,000 --> 00:02:59,100
+Phần sáu, thông báo, dùng ốp-sơ-vờ. pắp-lít-sơ chỉ chạy sau khi chan séc xừn com-mít, gửi cho từng ốp-sơ-vờ bằng com-pờ lít-tơ-bồ phiu-chờ trên ích-xơ-kiu-tờ xơ-vít riêng. Một kênh lỗi không ảnh hưởng kênh khác.
 
 15
-00:03:00,200 --> 00:03:08,000
-Có hai ốp-dơ-vơ: in áp lưu thông báo cho khách đọc, i-meo ghi lóc giả lập. Thêm kênh mới chỉ cần thêm một lớp.
+00:02:59,600 --> 00:03:07,400
+Có hai ốp-sơ-vờ: in áp lưu thông báo cho khách đọc, i-meo ghi lốc giả lập. Thêm kênh mới chỉ cần thêm một lớp.
 
 16
-00:03:08,500 --> 00:03:21,800
-Tóm tắt xô-lít: mỗi lớp một trách nhiệm; mở rộng thanh toán và thông báo không sửa cốt cũ; các lớp con thay thế nhau được; in-tơ-phây nhỏ theo vai trò; và xơ-vít phụ thuộc áp-xờ-trắc-sần nên dễ mốc.
+00:03:07,900 --> 00:03:21,100
+Tóm tắt xô-lít: mỗi lớp một trách nhiệm; mở rộng thanh toán và thông báo không sửa cốt cũ; các lớp con thay thế nhau được; in-tơ-phây nhỏ theo vai trò; và sơ vít phụ thuộc áp chách sừn nên dễ móc.
 
 17
-00:03:22,300 --> 00:03:37,100
-Ba đi-dai pát-tần và lý do chọn. phác-tơ-ri mé-thợt để việc tạo xờ-tra-tơ-gi nằm ở lớp con. xờ-tra-tơ-gi để mỗi cách thanh toán là một thuật toán riêng. ốp-dơ-vơ để tách đơn hàng khỏi các kênh thông báo và gửi bất đồng bộ.
+00:03:21,600 --> 00:03:36,200
+Ba đi-dai pát-từn và lý do chọn. phách-to-ri me thót để việc tạo sờ chết gi nằm ở lớp con. sờ chết gi để mỗi cách thanh toán là một thuật toán riêng. ốp-sơ-vờ để tách đơn hàng khỏi các kênh thông báo và gửi bất đồng bộ.
 
 18
-00:03:37,600 --> 00:03:48,800
-Phần kiểm thử. iu-nít tét giỏ hàng dùng di-iu-nít năm và mốc-ki-tô, ri-pô-di-to-ri được mốc. Ví dụ thêm cùng khóa hai lần thì số lượng cộng dồn và không tạo giỏ mới.
+00:03:36,700 --> 00:03:47,900
+Phần kiểm thử. iu-nít tét giỏ hàng dùng di-iu-nít năm và móc-ki-tô, rì-pô-si-tơ-ri được móc. Ví dụ thêm cùng khóa hai lần thì số lượng cộng dồn và không tạo giỏ mới.
 
 19
-00:03:49,300 --> 00:04:02,100
-in-tơ-grây-sần tét chạy trên pốt-gờ-rét thật bằng tét con-tê-nơ. Em cố tình cho một bước lỗi giữa chéc-ao: không có đơn mới, giỏ còn nguyên, không có thông báo. tran-xắc-sần đã rôn-béc đúng.
+00:03:48,400 --> 00:04:01,300
+in-tơ-grây-sừn tét chạy trên pót gờ ry thật bằng tét con-tên-nơ. Em cố tình cho một bước lỗi giữa chếch ao: không có đơn mới, giỏ còn nguyên, không có thông báo. chan séc xừn đã rôn-bách đúng.
 
 20
-00:04:02,600 --> 00:04:08,100
-Kết quả: 56 tét đều pát, gồm iu-nít tét các xơ-vít và in-tơ-grây-sần tét.
+00:04:01,800 --> 00:04:07,300
+Kết quả: 56 tét đều pát, gồm iu-nít tét các sơ vít và in-tơ-grây-sừn tét.
 
 21
-00:04:08,600 --> 00:04:16,500
-Giờ đê-mô lâu-cồ. Em chạy hạ tầng bằng đốc-cơ com-pâu và bốn xơ-vít, rồi dùng pốt-men với en-vai-rần-mần lâu-cồ.
+00:04:07,800 --> 00:04:15,600
+Giờ đề mô lô cồ. Em chạy hạ tầng bằng đốc-cơ còm-pâu và bốn sơ vít, rồi dùng pốt-men với en vai ron mừn lô cồ.
 
 22
-00:04:17,000 --> 00:04:21,700
+00:04:16,100 --> 00:04:20,800
 Danh sách sản phẩm công khai: có giá, không lộ linh vi-đi-ô.
 
 23
-00:04:22,200 --> 00:04:27,700
-Tìm kiếm sản phẩm theo tên, ây-pi-ai công khai, dùng in-đéc vừa trình bày.
+00:04:21,300 --> 00:04:26,900
+Tìm kiếm sản phẩm theo tên, ây-pi-ai công khai, dùng in đếch vừa trình bày.
 
 24
-00:04:28,200 --> 00:04:34,400
-Đăng ký tài khoản mới: kết quả 201, nhận ác-xét tô-kần. Tài khoản này là cát-xtơ-mơ.
+00:04:27,400 --> 00:04:33,700
+Đăng ký tài khoản mới: kết quả 201, nhận ách sét tốc cừn. Tài khoản này là cớt từm mờ.
 
 25
-00:04:34,900 --> 00:04:39,800
-Đăng nhập cát-xtơ-mơ, pốt-men tự lưu tô-kần cho các ri-qoét sau.
+00:04:34,200 --> 00:04:39,200
+Đăng nhập cớt từm mờ, pốt-men tự lưu tốc cừn cho các ri-quét sau.
 
 26
-00:04:40,300 --> 00:04:45,500
-cát-xtơ-mơ gọi ây-pi-ai tạo sản phẩm của át-min bị chặn với lỗi 403.
+00:04:39,700 --> 00:04:44,900
+cớt từm mờ gọi ây-pi-ai tạo sản phẩm của át-min bị chặn với lỗi 403.
 
 27
-00:04:46,000 --> 00:04:51,500
-Đăng nhập tài khoản át-min có sẵn, tô-kần được lưu vào biến át-min tô-kần.
+00:04:45,400 --> 00:04:51,100
+Đăng nhập tài khoản át-min có sẵn, tốc cừn được lưu vào biến át-min tốc cừn.
 
 28
-00:04:52,000 --> 00:04:56,000
+00:04:51,600 --> 00:04:55,600
 át-min tạo sản phẩm mới, kết quả 201.
 
 29
-00:04:56,500 --> 00:05:00,500
+00:04:56,100 --> 00:05:00,100
 át-min cập nhật giá sản phẩm.
 
 30
-00:05:01,000 --> 00:05:05,500
-Sang vai trò cát-xtơ-mơ: thêm khóa mít-đồ gia-va vào giỏ.
+00:05:00,600 --> 00:05:05,000
+Sang vai trò cớt từm mờ: thêm khóa mít-đồ da-va vào giỏ.
 
 31
-00:05:06,000 --> 00:05:10,100
+00:05:05,500 --> 00:05:09,600
 Cập nhật số lượng lên hai, tổng tiền được tính lại.
 
 32
-00:05:10,600 --> 00:05:14,600
+00:05:10,100 --> 00:05:14,100
 Xóa một sản phẩm khỏi giỏ, trả về 204.
 
 33
-00:05:15,100 --> 00:05:19,100
+00:05:14,600 --> 00:05:18,600
 Xem lại giỏ: một sản phẩm, số lượng hai.
 
 34
-00:05:19,600 --> 00:05:23,900
-Danh sách phương thức thanh toán lấy từ re-gít-xờ-tri.
+00:05:19,100 --> 00:05:23,200
+Danh sách phương thức thanh toán lấy từ re git tri.
 
 35
-00:05:24,400 --> 00:05:28,400
+00:05:23,700 --> 00:05:27,700
 Chưa mua thì xem vi-đi-ô bị 403.
 
 36
-00:05:28,900 --> 00:05:37,500
-Đặt hàng bằng vi-en-pây giả lập: đơn pết, có mã giao dịch, trạng thái con-phơm. Giỏ được làm trống trong cùng tran-xắc-sần.
+00:05:28,200 --> 00:05:36,800
+Đặt hàng bằng vi-en-pay giả lập: đơn pết, có mã giao dịch, trạng thái còn-phơm. Giỏ được làm trống trong cùng chan séc xừn.
 
 37
-00:05:38,000 --> 00:05:42,000
+00:05:37,300 --> 00:05:41,300
 Đã mua thì xem được vi-đi-ô.
 
 38
-00:05:42,500 --> 00:05:46,500
-Thông báo đơn hàng do ốp-dơ-vơ tạo ra.
+00:05:41,800 --> 00:05:45,800
+Thông báo đơn hàng do ốp-sơ-vờ tạo ra.
 
 39
-00:05:47,000 --> 00:05:54,900
-Trong lóc, ri-qoét chạy trên thờ-rét của tom-ket, còn hai ốp-dơ-vơ chạy song song trên thờ-rét o-đơ nâu-ti-phai.
+00:05:46,300 --> 00:05:54,100
+Trong lốc, ri-quét chạy trên thờ-rét của tom-cát, còn hai ốp-sơ-vờ chạy song song trên thờ-rét o-đờ no-ti-phai.
 
 40
-00:05:55,400 --> 00:05:59,500
-Đặt hàng xi âu đi: đơn ở trạng thái chờ thanh toán.
+00:05:54,600 --> 00:05:58,600
+Đặt hàng cốt: đơn ở trạng thái chờ thanh toán.
 
 41
-00:06:00,000 --> 00:06:04,000
-xi âu đi chưa trả tiền nên vi-đi-ô vẫn bị 403.
+00:05:59,100 --> 00:06:03,100
+cốt chưa trả tiền nên vi-đi-ô vẫn bị 403.
 
 42
-00:06:04,500 --> 00:06:10,000
+00:06:03,600 --> 00:06:09,100
 Vai trò át-min xác nhận đã nhận tiền: đơn chuyển sang pết và mở quyền học.
 
 43
-00:06:10,500 --> 00:06:14,500
+00:06:09,600 --> 00:06:13,600
 Xác nhận lần hai bị từ chối với 409.
 
 44
-00:06:15,000 --> 00:06:19,000
+00:06:14,100 --> 00:06:18,100
 Khách nhận thêm thông báo đơn đã được xác nhận.
 
 45
-00:06:19,500 --> 00:06:23,500
+00:06:18,600 --> 00:06:22,600
 Đặt hàng khi giỏ trống trả 400.
 
 46
-00:06:24,000 --> 00:06:29,300
-át-min ngừng bán sản phẩm, sản phẩm biến mất khỏi ca-ta-lóc công khai.
+00:06:23,100 --> 00:06:28,400
+át-min ngừng bán sản phẩm, sản phẩm biến mất khỏi ca-ta-lốc công khai.
 
 47
-00:06:29,800 --> 00:06:36,300
-Cùng luồng đó trên giao diện web. cát-xtơ-mơ thêm sản phẩm và sửa số lượng ngay trong giỏ.
+00:06:28,900 --> 00:06:35,400
+Cùng luồng đó trên giao diện web. cớt từm mờ thêm sản phẩm và sửa số lượng ngay trong giỏ.
 
 48
-00:06:36,800 --> 00:06:41,500
-Đặt hàng vi-en-pây xong, đơn hiện pết và có nút xem vi-đi-ô.
+00:06:35,900 --> 00:06:40,600
+Đặt hàng vi-en-pay xong, đơn hiện pết và có nút xem vi-đi-ô.
 
 49
-00:06:42,000 --> 00:06:48,000
-Đăng nhập át-min, giao diện chuyển sang quản lý đơn. Đơn xi âu đi có nút xác nhận.
+00:06:41,100 --> 00:06:46,800
+Đăng nhập át-min, giao diện chuyển sang quản lý đơn. Đơn cốt có nút xác nhận.
 
 50
-00:06:48,500 --> 00:06:52,500
-Bấm xác nhận, đơn chuyển sang con-phơm.
+00:06:47,300 --> 00:06:51,300
+Bấm xác nhận, đơn chuyển sang còn-phơm.
 
 51
-00:06:53,000 --> 00:06:57,000
+00:06:51,800 --> 00:06:55,800
 át-min thêm, sửa và ngừng bán sản phẩm.
 
 52
-00:06:57,500 --> 00:07:06,200
-Phần mở rộng. Mỗi lần pút, gít-hắp ác-sần chạy toàn bộ tét. tét xanh thì mới biu im-mịch, đẩy lên a-ma-dôn i xi a và đi-ploi.
+00:06:56,300 --> 00:07:05,100
+Phần mở rộng. Mỗi lần pút, gít-hắp ác-sừn chạy toàn bộ tét. tét xanh thì mới biu i-mịch, đẩy lên a-ma-dôn i xi a và đi pờ loi.
 
 53
-00:07:06,700 --> 00:07:18,700
-Về xi-crít: mật khẩu khai báo trong gít-hắp xi-crít, pai-lai chuyển vào pa-ra-mi-tơ xờ-to dạng mã hóa, i xi tu đọc bằng ai ây em rôn khi đi-ploi. Không có mật khẩu nào trong cốt.
+00:07:05,600 --> 00:07:18,100
+Về xíc-cờ rít: mật khẩu khai báo trong gít-hắp xi-cờ rít, pai-lai chuyển vào pa-ra-mét-tơ xờ-to dạng mã hóa, i xi tu đọc bằng ai ây em rôn khi đi pờ loi. Không có mật khẩu nào trong cốt.
 
 54
-00:07:19,200 --> 00:07:24,600
-Đây là một lần pai-lai chạy thành công: ve-ri-phai xong rồi mới đi-ploi.
+00:07:18,600 --> 00:07:24,100
+Đây là một lần pai-lai chạy thành công: ve-ri-phai xong rồi mới đi pờ loi.
 
 55
-00:07:25,100 --> 00:07:37,400
-Hạ tầng ây đắp-liu ét tạo bằng cờ-lao pho-mây-sần: cờ-lao phờ-rân làm cổng ết ti ti pi ét, i xi tu chạy con-tê-nơ, a đi ét lưu dữ liệu, i xi a lưu im-mịch, ét ba lưu vi-đi-ô khóa học.
+00:07:24,600 --> 00:07:36,900
+Hạ tầng a đáp liu ét tạo bằng cờ-lao phom-mây-sừn: cờ-lao phờ-ron làm cổng ết ti ti pi ét, i xi tu chạy còn-tên-nơ, a đi ét lưu dữ liệu, i xi a lưu i-mịch, ét ba lưu vi-đi-ô khóa học.
 
 56
-00:07:37,900 --> 00:07:49,000
-vi-đi-ô không lưu trong đây-ta-bết. át-min nhận một linh áp-lốt có chữ ký, phai đi thẳng lên ét ba, sau đó ây-pi-ai kiểm tra phai tồn tại rồi mới gắn vào khóa học.
+00:07:37,400 --> 00:07:48,500
+vi-đi-ô không lưu trong đa ta bây. át-min nhận một linh ắp loát có chữ ký, phai đi thẳng lên ét ba, sau đó ây-pi-ai kiểm tra phai tồn tại rồi mới gắn vào khóa học.
 
 57
-00:07:49,500 --> 00:07:58,200
-Giờ đê-mô trên ây đắp-liu ét qua cờ-lao phờ-rân. át-min đăng nhập, thấy đơn xi âu đi đang chờ và bấm xác nhận đã thanh toán.
+00:07:49,000 --> 00:07:57,300
+Giờ đề mô trên a đáp liu ét qua cờ-lao phờ-ron. át-min đăng nhập, thấy đơn cốt đang chờ và bấm xác nhận đã thanh toán.
 
 58
-00:07:58,700 --> 00:08:06,600
-át-min tải vi-đi-ô bài học cho khóa mít-đồ gia-va. phai đi thẳng lên ét ba, cột vi-đi-ô chuyển thành xờ-to-rịch.
+00:07:57,800 --> 00:08:05,600
+át-min tải vi-đi-ô bài học cho khóa mít-đồ da-va. phai đi thẳng lên ét ba, cột vi-đi-ô chuyển thành xờ-to-rếc.
 
 59
-00:08:07,100 --> 00:08:13,900
-Một khách mới đăng ký tài khoản. Mật khẩu phải từ mười ký tự, tài khoản mới luôn là cát-xtơ-mơ.
+00:08:06,100 --> 00:08:12,900
+Một khách mới đăng ký tài khoản. Mật khẩu phải từ mười ký tự, tài khoản mới luôn là cớt từm mờ.
 
 60
-00:08:14,400 --> 00:08:19,500
-Khách thêm khóa mít-đồ gia-va vào giỏ và chọn thanh toán vi-en-pây.
+00:08:13,400 --> 00:08:18,400
+Khách thêm khóa mít-đồ da-va vào giỏ và chọn thanh toán vi-en-pay.
 
 61
-00:08:20,000 --> 00:08:27,000
+00:08:18,900 --> 00:08:25,900
 Đặt hàng thành công, đơn pết. Khách mở vi-đi-ô, phát từ ét ba bằng linh riêng chỉ có hạn một giờ.
 
 62
-00:08:27,500 --> 00:08:31,800
-Và khách nhận được thông báo đơn hàng do ốp-dơ-vơ gửi.
+00:08:26,400 --> 00:08:30,700
+Và khách nhận được thông báo đơn hàng do ốp-sơ-vờ gửi.
 
 63
-00:08:32,300 --> 00:08:41,700
-Tóm lại, em đã hoàn thành đủ yêu cầu đề bài, có tét chạy tự động và triển khai lên ây đắp-liu ét. Em cảm ơn thầy và các bạn đã theo dõi.
+00:08:31,200 --> 00:08:40,500
+Tóm lại, em đã hoàn thành đủ yêu cầu đề bài, có tét chạy tự động và triển khai lên a đáp liu ét. Em cảm ơn thầy và các bạn đã theo dõi.

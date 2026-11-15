@@ -1,4 +1,4 @@
-# Kịch bản demo OJT — Middle Java Store (E-Commerce Mini)
+# Hướng dẫn chạy và demo OJT — Middle Java Store (E-Commerce Mini)
 
 Hệ thống bán các khóa Java quay sẵn: sản phẩm là khóa học, video nằm trên YouTube. Khách đăng ký, tìm khóa học, thêm vào giỏ, đặt hàng và thanh toán (VNPay giả lập, COD, chuyển khoản). Khi đã thanh toán, khách được mở quyền xem video. ADMIN quản lý sản phẩm và xác nhận thanh toán cho đơn COD hoặc chuyển khoản. Mỗi lần trạng thái đơn đổi, hệ thống gửi thông báo.
 
@@ -6,8 +6,6 @@ Hệ thống bán các khóa Java quay sẵn: sản phẩm là khóa học, vide
 |---|---|
 | `demo/BAO_CAO_OJT.md` | Báo cáo: kiến thức nào ở chức năng nào, SOLID, Design Pattern và lý do chọn |
 | `demo/postman/` | Postman collection (38 request, có test script tự lưu token và id) + environment LOCAL và AWS |
-| `demo/run_demo.py` | Chạy toàn bộ kịch bản bằng một lệnh, dùng để tập dượt hoặc kiểm tra trước khi quay |
-| `demo/SCRIPT_NOI.md` | Kịch bản thuyết trình theo từng phần của video demo |
 | `api-gateway/src/main/resources/static/index.html` | Giao diện web tối giản cho CUSTOMER và ADMIN |
 
 ## 1. Chuẩn bị môi trường local
@@ -41,11 +39,10 @@ java -jar api-gateway/target/api-gateway-1.0.0.jar
 
 - Gateway: `http://localhost:8080`. Health check: `/actuator/health`. Mở `http://localhost:8080/` để xem giao diện web.
 - Tài khoản ADMIN local `admin@middlejava.local` / `Admin123!Local` chỉ dùng cho máy local.
-- Tập dượt nhanh trước khi quay: `python demo/run_demo.py --env local`. Lệnh in ra 32 bước, bước nào cũng phải `OK`.
 
 ## 2. Demo local bằng Postman
 
-Import `demo/postman/MiddleJavaStore.postman_collection.json` và `demo/postman/local.postman_environment.json`, chọn environment **Middle Java Store - LOCAL**. Mỗi lần quay nên đổi biến `customerEmail` sang một email mới. Bấm **Send** lần lượt từ trên xuống; test script tự lưu `accessToken`, `adminToken`, `courseId`, `newCourseId`, `codOrderId`.
+Import `demo/postman/MiddleJavaStore.postman_collection.json` và `demo/postman/local.postman_environment.json`, chọn environment **Middle Java Store - LOCAL**. Mỗi lần demo nên đổi biến `customerEmail` sang một email mới. Bấm **Send** lần lượt từ trên xuống; test script tự lưu `accessToken`, `adminToken`, `courseId`, `newCourseId`, `codOrderId`.
 
 | # | Request | Kết quả cần chỉ ra | Kiến thức / pattern |
 |---|---|---|---|
@@ -92,15 +89,7 @@ Muốn chứng minh observer chạy bất đồng bộ, mở log của `learning
 
 **Bằng Postman:** chọn environment **Middle Java Store - AWS** (`demo/postman/cloud.postman_environment.json`), điền `adminPassword` ngay trong Postman (đừng lưu vào file), rồi chạy cùng collection như ở local.
 
-Chạy kiểm tra cloud bằng script (phần CUSTOMER chạy được khi chưa đặt mật khẩu admin):
-
-```powershell
-python demo/run_demo.py --env cloud --base-url https://d3jaw9bd80q6ki.cloudfront.net
-$env:ADMIN_EMAIL = '<email admin>'; $env:ADMIN_PASSWORD = '<mật khẩu admin>'
-python demo/run_demo.py --env cloud --base-url https://d3jaw9bd80q6ki.cloudfront.net
-```
-
-## 4. Đường dẫn code để thuyết trình
+## 4. Đường dẫn code theo từng yêu cầu
 
 | Kiến thức | File |
 |---|---|

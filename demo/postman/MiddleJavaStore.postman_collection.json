@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Middle Java Store - OJT E-Commerce Mini",
-    "description": "Kịch bản demo: auth/JWT, sản phẩm, giỏ hàng, đặt hàng, thanh toán (Strategy/Factory), thông báo (Observer). Chạy theo thứ tự từ trên xuống.",
+    "description": "Luồng demo: auth/JWT, sản phẩm, giỏ hàng, đặt hàng, thanh toán (Strategy/Factory), thông báo (Observer). Chạy theo thứ tự từ trên xuống.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [

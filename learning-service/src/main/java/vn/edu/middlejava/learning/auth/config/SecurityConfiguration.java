@@ -72,7 +72,7 @@ public class SecurityConfiguration {
         }
         return http.csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/api/auth/**", "/api/courses", "/api/courses/*", "/actuator/health", "/actuator/info", "/actuator/prometheus").permitAll()
+                        .requestMatchers("/api/auth/**", "/api/courses", "/api/courses/*", "/actuator/health", "/actuator/info", "/actuator/prometheus", "/error").permitAll()
                         .requestMatchers("/api/admin/**", "/api/courses/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(resourceServer -> resourceServer.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))

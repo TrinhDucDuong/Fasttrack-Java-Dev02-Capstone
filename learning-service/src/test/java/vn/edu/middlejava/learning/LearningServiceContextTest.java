@@ -233,6 +233,15 @@ class LearningServiceContextTest {
         assertThat(orderRepository.findByIdAndUserId(paidOrderId, customerId)).isPresent();
     }
 
+    @Test
+    void registrationWithTooShortPasswordIsRejectedWithClearBadRequest() throws Exception {
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"short-" + UUID.randomUUID() + "@example.test\",\"password\":\"123456789\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("password")));
+    }
+
     private String registerAndGetToken(String email, String password) throws Exception {
         String response = mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)

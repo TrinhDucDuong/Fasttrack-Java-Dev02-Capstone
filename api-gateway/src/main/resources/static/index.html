@@ -106,7 +106,7 @@
     <form class="stack" id="auth-form">
       <h2 id="auth-title">Đăng nhập</h2>
       <label>Email <input name="email" type="email" autocomplete="username" required></label>
-      <label>Mật khẩu <input name="password" type="password" autocomplete="current-password" minlength="8" required></label>
+      <label>Mật khẩu <input name="password" type="password" autocomplete="current-password" minlength="10" maxlength="72" placeholder="Tối thiểu 10 ký tự" required></label>
       <button type="submit" id="auth-submit">Đăng nhập</button>
       <p class="note">Tài khoản mới đăng ký có role <b>CUSTOMER</b>. Tài khoản <b>ADMIN</b> được tạo sẵn khi hệ thống khởi động.</p>
     </form>
